@@ -33,6 +33,7 @@ Run `npm run build`, then `npm start`. Assets are served from `dist/` by the sam
 
 - `OLLAMA_MODEL`: installed local model used for message extraction. Omit to disable extraction.
 - `OLLAMA_URL`: optional Ollama service URL. Defaults to the local Ollama endpoint.
+- `PETI_OLLAMA_CPU`: set to `1` to use CPU inference. This was required for the verified Windows run after GPU inference timed out.
 
 Start Ollama and install a model that supports structured output before setting the model name in your local environment. The server sends message text and product descriptions to this service. Use synthetic messages for the demo. [Ollama structured outputs](https://docs.ollama.com/capabilities/structured-outputs).
 
@@ -40,6 +41,7 @@ Run the opt-in live acceptance test from PowerShell once Ollama is running and t
 
 ```powershell
 $env:OLLAMA_MODEL = 'qwen2.5:3b'
+$env:PETI_OLLAMA_CPU = '1'
 $env:PETI_LIVE_CAPTURE = '1'
 npm run build
 npm run test:e2e -- -g "live model captures"
@@ -65,4 +67,4 @@ Choose an account, request the six-digit code, then enter the code shown in the 
 
 ## Limitations for this draft
 
-The live model walkthrough, target-company Tally import test, hosted deployment and final TDD are pending. The app uses demo OTP delivery and in-memory cart drafts. The compressed production build reached a 4.545-second median in the local slow-3G simulation, above the three-second target. See docs/PROGRESS.md for the measurement conditions.
+The target-company Tally import test, hosted deployment and final TDD are pending. The app uses demo OTP delivery and in-memory cart drafts. The compressed production build reached a 4.545-second median in the local slow-3G simulation, above the three-second target. See docs/PROGRESS.md for the measurement conditions.

@@ -17,7 +17,7 @@ Optional offline/photo/voice features, hosted deployment, public GitHub remote, 
 
 Desk staff can cancel a confirmed order or process and pack it. Open a packed order to download its CSV for Tally mapping. The company-specific Tally import still needs validation.
 
-Message capture and retailer-specific aliases are implemented. Configure Ollama using `deployment.md` to try capture. Automated checks use a fixture response. The live sample message walkthrough is pending.
+Message capture and retailer-specific aliases are implemented. The full assignment message passed a live Chrome walkthrough using Ollama and Qwen 2.5 3B on CPU. Configure Ollama using `deployment.md` to try capture.
 
 ## Run locally
 

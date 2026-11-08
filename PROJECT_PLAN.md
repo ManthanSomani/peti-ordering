@@ -1,6 +1,6 @@
 # FMCG retailer ordering — development and delivery plan
 
-Status: foundation, manual ordering and desk export complete locally. AI capture is implemented and its live model check remains open. See docs/PROGRESS.md for verification evidence.
+Status: foundation, manual ordering, live AI capture, desk export and quality verification complete locally. See docs/PROGRESS.md for verification evidence.
 Source: the assignment brief and Problem 2 supplied by the user in this chat.
 Selected project: FMCG distributor's retailer ordering app with AI order capture.
 
@@ -216,7 +216,7 @@ Performance targets and business success numbers in the brief are not achieved o
 - [x] Brief reviewed; project selected by user; plan saved.
 - [x] Phase 1: design and local foundation (AI-provider setup deliberately deferred to Phase 3; Tally compatibility remains unclaimed).
 - [x] Phase 2: manual ordering, scheme logic, atomic stock checks and role isolation.
-- [ ] Phase 3: AI capture.
+- [x] Phase 3: AI capture. Full sample verified in Chrome with local Ollama.
 - [x] Phase 4: desk and export. Local CSV handoff verified. Target-company Tally import remains unverified.
 - [x] Phase 5: quality verification. Slow-3G benchmark measured and documented above target.
 - [ ] Phase 6: deployment and package.

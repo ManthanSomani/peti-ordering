@@ -44,7 +44,7 @@ it("grounds capture in the catalogue and keeps learned aliases retailer-scoped",
     .set(headers)
     .send(body)
     .expect(200);
-  const message = "bhaiya 5 peti biscuit chhota";
+  const message = "bhaiya 5 biscuit chhota";
   vi.stubEnv("OLLAMA_MODEL", "fixture");
   const provider = vi.fn(async () =>
     Response.json({
@@ -52,7 +52,7 @@ it("grounds capture in the catalogue and keeps learned aliases retailer-scoped",
         content: JSON.stringify({
           lines: [
             {
-              source: "5 peti biscuit chhota",
+              index: 0,
               candidates: ["unknown-sku"],
               quantity: 5,
               unit: "unknown",

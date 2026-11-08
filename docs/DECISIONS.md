@@ -35,7 +35,7 @@ Use an Excel worksheet and a company-specific transaction mapping when validatin
 
 ## AI boundary
 
-The capture endpoint uses a configurable Ollama model and validates structured responses. Source phrases must appear verbatim in the message. Only catalogue SKU IDs can become suggestions. The latest 20 non-cancelled orders provide retailer-specific context. Desk aliases use normalized product phrases and apply only to that order's retailer. A unique alias match is ranked first as a suggestion for human review. Confidence is a qualitative model estimate. The capture endpoint returns a draft without writing orders.
+The capture endpoint uses a configurable Ollama model and validates structured responses. It maps model indexes back to verbatim source fragments and presents omitted fragments for manual review. Only catalogue SKU IDs can become suggestions. The latest 20 non-cancelled orders provide retailer-specific context. The server ranks uniquely matched pack sizes within the suggested product family and reads an unambiguous explicit whole-case count. Desk aliases use normalized product phrases and apply only to that order's retailer. Confidence is a qualitative model estimate. The capture endpoint returns a draft for human review.
 
 ## Upstream implementation references
 

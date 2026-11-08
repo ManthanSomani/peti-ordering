@@ -22,9 +22,7 @@ The brief's uncertain money conventions are recorded in docs/DECISIONS.md and sh
 
 ## Remaining before submission
 
-Phase 3 implementation is in place. The build, 20 domain/API tests and four Chrome walkthroughs passed, including catalogue grounding, alias isolation and explicit quantity review. Capture checks use a fixture model response. The remaining Phase 3 gate is running the assignment's full sample against a configured live model and inspecting its suggestions.
-
-Live verification was attempted on 8 November 2026. Both Windows installer attempts and the official standalone download returned HTTP 504. The opt-in browser test and commands in deployment.md are ready for a machine with Ollama and a model installed. The Phase 3 completion box remains open until that test passes.
+Phase 3 passed the live Chrome acceptance test on 8 November 2026 using Ollama with Qwen 2.5 3B and CPU inference. The test took 22 seconds. It verified the biscuit and detergent suggestions, the unavailable 250 g tea and that review through checkout created no order. The GPU attempt exceeded the 60-second request timeout on this machine. The local API and domain suite also passed all 21 tests.
 
 Phase 4 is complete locally. The desk can cancel a confirmed order with explicit confirmation, or process and pack it before downloading a staging CSV. The build, 21 domain/API tests and four Chrome walkthroughs passed. The export checks cover saved scheme values, formula escaping, rejection of invalid or cancelled orders, actual browser download and retailer access denial. Target-company Tally import requires the mappings in DECISIONS.md.
 
