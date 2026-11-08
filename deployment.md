@@ -22,6 +22,17 @@ Startup creates the database schema and applies version 1 if missing. Demo mode 
 
 Run `npm run build`, then `npm start`. Assets are served from `dist/` by the same server as the API. A deployed SQLite app requires a persistent volume and a single writer instance; ephemeral serverless storage is unsuitable. Configure the actual HTTPS origin, enable secure cookies, and configure HOST for the hosting network. No infrastructure has been provisioned.
 
+## Railway deployment plan
+
+1. Create one service from the GitHub repository. The Dockerfile builds the UI and runs the existing Express server. Railway reads the health-check path and single replica setting from `railway.toml`.
+2. Attach a persistent volume at `/data` and set `DATABASE_PATH` to a SQLite file inside it. Use a fresh hosted database for the synthetic demo.
+3. Generate an HTTPS domain, set `APP_ORIGIN` to that exact origin and enable `COOKIE_SECURE`. Enable `DEMO_MODE` for the seeded reviewer accounts. Railway supplies `PORT` and the container listens on all interfaces.
+4. Verify the health endpoint and sign in as both roles. Place a test order, pack it, download the CSV, then confirm the data survives a restart.
+
+The verified Ollama model runs on the local machine. A hosted AI demo requires a separate reachable Ollama service. A private service with persistent model storage is an option, subject to capacity, usage cost and live verification. Keep the model endpoint on a private network. When deploying only the app service, leave `OLLAMA_MODEL` unset and direct reviewers to the local AI walkthrough.
+
+Railway references: [persistent volumes](https://docs.railway.com/volumes) and [deployment configuration](https://docs.railway.com/config-as-code/reference).
+
 ## Environment variables (names only)
 
 - `PORT`: HTTP listening port.
