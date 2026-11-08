@@ -1539,3 +1539,27 @@ tbody tr:hover {
     border: 1px solid ButtonText;
   }
 }
+.capture-form {
+  display: grid;
+  gap: var(--space-medium);
+  margin-block: var(--space-large);
+  padding: var(--space-medium);
+  max-width: 42rem;
+  min-width: 0;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-panel);
+  background: var(--color-surface);
+}
+
+.capture-form textarea,
+.capture-form select {
+  min-height: 44px;
+  width: 100%;
+  padding: var(--space-small);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  font: inherit;
+}
+.capture-form textarea.resize-none {
+  resize: none;
+}

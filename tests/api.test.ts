@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import request from "supertest";
 import { randomUUID } from "node:crypto";
 import { openDatabase, seedDatabase } from "../server/database";
@@ -29,6 +29,63 @@ beforeEach(() => {
   app = createApp(db, { demo: true, origin, secure: false });
 });
 afterEach(() => db.close());
+it("grounds capture in the catalogue and keeps learned aliases retailer-scoped", async () => {
+  const a = await login();
+  const b = await login("verma@peti.demo");
+  const desk = await login("desk@peti.demo");
+  const body = { phrase: "biscuit chhota", sku: "SKU-BS-075" };
+  await a
+    .post("/api/orders/PT-DEMO-001/aliases")
+    .set(headers)
+    .send(body)
+    .expect(403);
+  await desk
+    .post("/api/orders/PT-DEMO-001/aliases")
+    .set(headers)
+    .send(body)
+    .expect(200);
+  const message = "bhaiya 5 peti biscuit chhota";
+  vi.stubEnv("OLLAMA_MODEL", "fixture");
+  const provider = vi.fn(async () =>
+    Response.json({
+      message: {
+        content: JSON.stringify({
+          lines: [
+            {
+              source: "5 peti biscuit chhota",
+              candidates: ["unknown-sku"],
+              quantity: 5,
+              unit: "unknown",
+              confidence: "low",
+            },
+          ],
+        }),
+      },
+    }),
+  );
+  vi.stubGlobal("fetch", provider);
+  try {
+    const first = await a
+      .post("/api/capture")
+      .set(headers)
+      .send({ message })
+      .expect(200);
+    const second = await b
+      .post("/api/capture")
+      .set(headers)
+      .send({ message })
+      .expect(200);
+    expect(
+      first.body.lines[0].candidates.map((p: { id: string }) => p.id),
+    ).toEqual(["SKU-BS-075"]);
+    expect(first.body.lines[0].unit).toBe("unknown");
+    expect(second.body.lines[0].candidates).toEqual([]);
+    expect((await a.get("/api/orders")).body.total).toBe(1);
+  } finally {
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+  }
+});
 describe("authentication and isolation", () => {
   it("requires authentication and rejects cross-origin writes", async () => {
     await request(app).get("/api/catalogue").expect(401);

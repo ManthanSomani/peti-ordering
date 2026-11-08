@@ -24,7 +24,14 @@ export function openDatabase(path: string) {
     CREATE TABLE IF NOT EXISTS order_events (id INTEGER PRIMARY KEY, order_id TEXT NOT NULL REFERENCES orders(id), actor_id TEXT NOT NULL REFERENCES users(id), status TEXT NOT NULL, created_at TEXT NOT NULL);
     CREATE INDEX IF NOT EXISTS orders_retailer_date ON orders(retailer_id,created_at DESC);
     CREATE INDEX IF NOT EXISTS sessions_expiry ON sessions(expires_at);
+    CREATE TABLE IF NOT EXISTS retailer_aliases (
+      retailer_id TEXT NOT NULL REFERENCES retailers(id),
+      phrase TEXT NOT NULL,
+      sku TEXT NOT NULL REFERENCES products(id),
+      PRIMARY KEY(retailer_id, phrase)
+    );
     INSERT OR IGNORE INTO schema_migrations VALUES(1,datetime('now'));
+    INSERT OR IGNORE INTO schema_migrations VALUES(2,datetime('now'));
   `);
   return db;
 }

@@ -25,6 +25,7 @@ import { CartProvider, useCart } from "./state";
 import { Button, ErrorNotice, Loading } from "./components/ui";
 import { Login } from "./pages/Login";
 import { Catalogue, CartPage } from "./pages/Catalogue";
+import { Capture } from "./pages/Capture";
 import { Orders, OrderDetail } from "./pages/Orders";
 
 export function App() {
@@ -192,6 +193,16 @@ function Shell({ user, onLogout }: { user: User; onLogout: () => void }) {
             <ErrorNotice error={logoutError} retry={logout} />
           ) : null}
           <Routes>
+            <Route
+              path="/capture"
+              element={
+                user.role === "retailer" ? (
+                  <Capture />
+                ) : (
+                  <Navigate to="/orders" replace />
+                )
+              }
+            />
             <Route
               path="/catalogue"
               element={

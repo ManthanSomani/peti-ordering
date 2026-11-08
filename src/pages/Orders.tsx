@@ -20,6 +20,7 @@ import {
   Button,
   EmptyState,
   ErrorNotice,
+  Field,
   Loading,
   Notice,
   StatusBadge,
@@ -177,7 +178,37 @@ export function OrderDetail({ user }: { user: User }) {
   >(`/orders/${encodeURIComponent(id ?? "")}`);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
-  async function advance(status: "processing" | "packed") {
+  const [cancelReview, setCancelReview] = useState(false);
+  const [exportError, setExportError] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  async function downloadExport(orderId: string) {
+    setExporting(true);
+    setExportError(false);
+    try {
+      const response = await fetch(
+        `/api/orders/${encodeURIComponent(orderId)}/export`,
+        {
+          signal: AbortSignal.timeout(15_000),
+        },
+      );
+      if (
+        !response.ok ||
+        !response.headers.get("Content-Type")?.startsWith("text/csv")
+      )
+        throw new Error("Export failed");
+      const url = URL.createObjectURL(await response.blob());
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `peti-${orderId}-tally-staging.csv`;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch {
+      setExportError(true);
+    } finally {
+      setExporting(false);
+    }
+  }
+  async function advance(status: "processing" | "packed" | "cancelled") {
     setBusy(true);
     setError(null);
     try {
@@ -186,6 +217,7 @@ export function OrderDetail({ user }: { user: User }) {
         body: JSON.stringify({ status }),
       });
       r.reload();
+      setCancelReview(false);
     } catch (e) {
       setError(e);
     } finally {
@@ -257,6 +289,16 @@ export function OrderDetail({ user }: { user: User }) {
                     {t("discount")}: {money(l.discountPaise)}
                   </span>
                 ) : null}
+                {user.role === "desk" && (
+                  <details>
+                    <summary>
+                      {locale === "hi"
+                        ? "उत्पाद का नाम सिखाएँ"
+                        : "Teach a product alias"}
+                    </summary>
+                    <AliasForm orderId={order.id} sku={l.sku} />
+                  </details>
+                )}
               </div>
               <strong>{money(l.totalPaise)}</strong>
             </div>
@@ -324,6 +366,60 @@ export function OrderDetail({ user }: { user: User }) {
               {t("markPacked")}
             </Button>
           ) : null}
+          {user.role === "desk" &&
+            order.status === "confirmed" &&
+            (cancelReview ? (
+              <div>
+                <Notice>
+                  {locale === "hi"
+                    ? "ऑर्डर रद्द करने पर पेटियाँ स्टॉक में वापस जाएँगी।"
+                    : "Cancelling returns the reserved cases to stock."}
+                </Notice>
+                <Button busy={busy} onClick={() => advance("cancelled")}>
+                  {locale === "hi"
+                    ? "रद्द करने की पुष्टि करें"
+                    : "Confirm cancellation"}
+                </Button>
+                <Button
+                  variant="ghost"
+                  disabled={busy}
+                  onClick={() => setCancelReview(false)}
+                >
+                  {locale === "hi" ? "ऑर्डर रखें" : "Keep order"}
+                </Button>
+              </div>
+            ) : (
+              <Button
+                variant="ghost"
+                disabled={busy}
+                onClick={() => setCancelReview(true)}
+              >
+                {locale === "hi" ? "ऑर्डर रद्द करें" : "Cancel order"}
+              </Button>
+            ))}
+          {user.role === "desk" && order.status === "packed" && (
+            <div>
+              <p>
+                {locale === "hi"
+                  ? "Tally मैपिंग के लिए CSV"
+                  : "CSV for Tally field mapping"}
+              </p>
+              {exportError && (
+                <Notice tone="error">
+                  {locale === "hi"
+                    ? "डाउनलोड नहीं हुआ। रिफ़्रेश करके फिर कोशिश करें।"
+                    : "Download failed. Refresh and try again."}
+                </Notice>
+              )}
+              <Button
+                className="full"
+                busy={exporting}
+                onClick={() => downloadExport(order.id)}
+              >
+                {locale === "hi" ? "CSV डाउनलोड करें" : "Download export CSV"}
+              </Button>
+            </div>
+          )}
           <Button variant="ghost" className="full" onClick={r.reload}>
             <RefreshCw size={15} />
             {t("refresh")}
@@ -331,5 +427,68 @@ export function OrderDetail({ user }: { user: User }) {
         </aside>
       </div>
     </section>
+  );
+}
+
+function AliasForm({ orderId, sku }: { orderId: string; sku: string }) {
+  const { locale } = useLocale();
+  const hi = locale === "hi";
+  const [phrase, setPhrase] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [status, setStatus] = useState<"saved" | "error" | null>(null);
+
+  return (
+    <form
+      className="capture-form"
+      noValidate
+      onSubmit={async (event) => {
+        event.preventDefault();
+        if (busy || phrase.trim().length < 2) return;
+        setBusy(true);
+        setStatus(null);
+        try {
+          await api(`/orders/${encodeURIComponent(orderId)}/aliases`, {
+            method: "POST",
+            body: JSON.stringify({ phrase, sku }),
+          });
+          setPhrase("");
+          setStatus("saved");
+        } catch {
+          setStatus("error");
+        } finally {
+          setBusy(false);
+        }
+      }}
+    >
+      <Field
+        id={`alias-${sku}`}
+        label={
+          hi
+            ? "इस दुकानदार के उत्पाद का नाम"
+            : "Retailer’s words for this product"
+        }
+        value={phrase}
+        maxLength={100}
+        disabled={busy}
+        onChange={(event) => {
+          setPhrase(event.target.value);
+          setStatus(null);
+        }}
+      />
+      <Button busy={busy} disabled={phrase.trim().length < 2}>
+        {hi ? "नाम सहेजें" : "Save product alias"}
+      </Button>
+      {status && (
+        <Notice tone={status === "saved" ? "success" : "error"}>
+          {status === "saved"
+            ? hi
+              ? "नाम इस दुकानदार के लिए सहेजा गया।"
+              : "Alias saved for this retailer."
+            : hi
+              ? "नाम सहेजा नहीं जा सका।"
+              : "Could not save the alias."}
+        </Notice>
+      )}
+    </form>
   );
 }

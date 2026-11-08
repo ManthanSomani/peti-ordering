@@ -22,6 +22,12 @@ The brief's uncertain money conventions are recorded in docs/DECISIONS.md and sh
 
 ## Remaining before submission
 
-Phase 3: actual text AI extraction, catalogue-grounded matching, uncertainty review and scoped correction aliases. Phase 4: order-desk export with a documented Tally boundary. Then performance measurement, final quality pass, hosted deployment if chosen, public remote repository, PDF/Word TDD and two-file ZIP. These are incomplete and are not represented in the UI as working features.
+Phase 3 implementation is in place. The build, 20 domain/API tests and four Chrome walkthroughs passed, including catalogue grounding, alias isolation and explicit quantity review. Capture checks use a fixture model response. The remaining Phase 3 gate is running the assignment's full sample against a configured live model and inspecting its suggestions.
 
-Known current limits: cart draft lives in browser memory; refreshing loses it. The OTP is intentionally displayed on screen in demo mode. SQLite requires a persistent volume for a hosted deployment and Node 22's built-in driver is experimental. No production load or slow-3G target has been measured. Order cancellation is implemented and API-tested but has no UI control.
+Live verification was attempted on 8 November 2026. Both Windows installer attempts and the official standalone download returned HTTP 504. The opt-in browser test and commands in deployment.md are ready for a machine with Ollama and a model installed. The Phase 3 completion box remains open until that test passes.
+
+Phase 4 is complete locally. The desk can cancel a confirmed order with explicit confirmation, or process and pack it before downloading a staging CSV. The build, 21 domain/API tests and four Chrome walkthroughs passed. The export checks cover saved scheme values, formula escaping, rejection of invalid or cancelled orders, actual browser download and retailer access denial. Target-company Tally import requires the mappings in DECISIONS.md.
+
+Later phases cover performance measurement, final quality checks, deployment if chosen, public repository, TDD and submission ZIP.
+
+The cart draft lives in browser memory and refreshing clears it. The OTP is displayed on screen in demo mode. SQLite requires a persistent volume for hosted deployment. Production load and the slow-3G target still need measurement.

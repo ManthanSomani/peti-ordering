@@ -19,13 +19,23 @@ Server modules own validation/auth/data; shared domain functions own scheme arit
 - States: confirmed -> processing -> packed; confirmed -> cancelled. Desk-only transitions; cancelled/packed are terminal in this slice. Retailer may view but cannot change status. Human confirmation occurs before creation.
 - Synthetic additional catalogue products, retailers, histories and brand names support demonstrations. Three source SKUs retain their provided values. Four fictional brands: Rozana, Ujala Home, Pahadi, Gharana. No link to similarly named real businesses is implied.
 
-## Tally boundary (future phase)
+## Tally export boundary
 
-No Tally version or company ledger mapping is supplied. Export will have a typed adapter and a documented fixture; integration may be mocked under the brief. Until a target format and mapping are implemented/tested, no Tally compatibility claim and no export UI action.
+The desk selects an order by opening its detail page. Packed orders can be downloaded as a UTF-8 staging CSV, one row per saved line. Prices, quantities, free goods and discounts come from the saved quote. Order references stay stable on repeat downloads. Downloads leave stock and order status untouched.
 
-## AI boundary (future phase)
+| CSV columns                                 | Suggested mapping for the target company                                                                                                    |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| OrderReference, OrderDateIST                | Group rows into one Sales Order by reference. Use the IST order date.                                                                       |
+| PartyReference, PartyName                   | Resolve to an existing party ledger using the company's mapping.                                                                            |
+| StockItemReference, StockItemName           | Resolve to an existing stock item using its SKU mapping.                                                                                    |
+| PiecesPerCase, PaidCases, FreeCases         | Use the company's unit mapping. In piece units, delivered quantity is (paid cases + free cases) × pieces per case. Bill only paid quantity. |
+| UnitPriceINR, GrossINR, DiscountINR, NetINR | Per-piece price and saved gross, discount and net line values in INR. Preserve totals when allocating the scheme and free goods.            |
 
-No provider selected/configured in this foundation. There is no fake extraction endpoint. Catalogue/order flow works independently. Extraction will produce drafts, not write orders; server validation and human confirmation remain mandatory. Select API provider and credentials in Phase 3, with source-linked fields and honest confidence labels.
+Use an Excel worksheet and a company-specific transaction mapping when validating in TallyPrime. Confirm the Sales Order voucher type, party and stock masters, units, free-goods treatment, sales ledger and tax allocations with the target company first. The CSV contains no tax breakout or company ledger IDs. A repeat download can be reconciled by order reference. External duplicate-import behavior must be verified in the target company. [TallyPrime transaction mapping](https://help.tallysolutions.com/how-to-manage-mapping-templates-for-importing-data/).
+
+## AI boundary
+
+The capture endpoint uses a configurable Ollama model and validates structured responses. Source phrases must appear verbatim in the message. Only catalogue SKU IDs can become suggestions. The latest 20 non-cancelled orders provide retailer-specific context. Desk aliases use normalized product phrases and apply only to that order's retailer. A unique alias match is ranked first as a suggestion for human review. Confidence is a qualitative model estimate. The capture endpoint returns a draft without writing orders.
 
 ## Upstream implementation references
 

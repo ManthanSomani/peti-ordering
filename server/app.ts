@@ -16,6 +16,8 @@ import {
 import type { DatabaseSync } from "node:sqlite";
 import { z } from "zod";
 import { catalogue } from "./database";
+import { orderExport } from "./order-export";
+import { captureOrder, normalizeAlias } from "./capture";
 import { DomainError, priceCart } from "../shared/pricing";
 import type { User, Order, Quote, Status } from "../shared/types";
 
@@ -273,6 +275,62 @@ export function createApp(db: DatabaseSync, config: Config) {
       pages,
     });
   });
+  app.post("/api/capture", retailer, async (req, res) => {
+    const { message } = z
+      .object({ message: z.string().trim().min(1).max(3000) })
+      .strict()
+      .parse(req.body);
+    const retailerId = res.locals.user.retailerId;
+    const products = catalogue(db, retailerId);
+    const history = db
+      .prepare(
+        "SELECT quote_json FROM orders WHERE retailer_id=? AND status!='cancelled' ORDER BY created_at DESC LIMIT 20",
+      )
+      .all(retailerId);
+    const recentSkus = [
+      ...new Set(
+        history.flatMap((row) =>
+          (
+            JSON.parse(String(row.quote_json)) as { lines: { sku: string }[] }
+          ).lines.map((line) => line.sku),
+        ),
+      ),
+    ].filter((sku) => products.some((product) => product.id === sku));
+    const aliases = db
+      .prepare("SELECT phrase, sku FROM retailer_aliases WHERE retailer_id=?")
+      .all(retailerId) as { phrase: string; sku: string }[];
+    res.json(await captureOrder(message, products, { recentSkus, aliases }));
+  });
+
+  app.post("/api/orders/:id/aliases", desk, (req, res) => {
+    const { phrase, sku } = z
+      .object({
+        phrase: z.string().trim().min(2).max(100),
+        sku: z.string().min(1).max(100),
+      })
+      .strict()
+      .parse(req.body);
+    const order = db
+      .prepare("SELECT retailer_id, quote_json FROM orders WHERE id=?")
+      .get(String(req.params.id));
+    if (!order)
+      throw new DomainError("ORDER_NOT_FOUND", "Order not found.", 404);
+    const key = normalizeAlias(phrase);
+    const quote = JSON.parse(String(order.quote_json)) as {
+      lines: { sku: string }[];
+    };
+    if (!/\p{L}/u.test(key) || !quote.lines.some((line) => line.sku === sku))
+      throw new DomainError(
+        "INVALID_ALIAS",
+        "Use a product phrase and a SKU from this order.",
+        400,
+      );
+    db.prepare(
+      "INSERT INTO retailer_aliases(retailer_id,phrase,sku) VALUES(?,?,?) ON CONFLICT(retailer_id,phrase) DO UPDATE SET sku=excluded.sku",
+    ).run(order.retailer_id, key, sku);
+    res.json({ saved: true });
+  });
+
   app.post("/api/cart/quote", retailer, (req, res) => {
     const { items } = z.object({ items: cartSchema }).strict().parse(req.body);
     res.json(priceCart(items, catalogue(db, res.locals.user.retailerId)));
@@ -411,6 +469,21 @@ export function createApp(db: DatabaseSync, config: Config) {
         .all(String(req.params.id)),
     });
   });
+  app.get("/api/orders/:id/export", desk, (req, res) => {
+    const row = db
+      .prepare(
+        "SELECT o.*, r.shop FROM orders o JOIN retailers r ON r.id=o.retailer_id WHERE o.id=?",
+      )
+      .get(String(req.params.id));
+    if (!row) throw new DomainError("NOT_FOUND", "Order not found.", 404);
+    const order = toOrder(row);
+    const csv = orderExport(order);
+    res
+      .attachment(`peti-${order.id}-tally-staging.csv`)
+      .type("text/csv")
+      .send(csv);
+  });
+
   app.patch("/api/orders/:id/status", desk, (req, res) => {
     const { status } = z
       .object({ status: z.enum(["processing", "packed", "cancelled"]) })

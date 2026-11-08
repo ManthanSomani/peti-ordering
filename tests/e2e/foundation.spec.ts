@@ -11,6 +11,94 @@ async function login(page: Page, email = "sharma@peti.demo") {
   await page.getByRole("button", { name: "Verify & sign in" }).click();
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 }
+test("live model captures the assignment message", async ({ page }) => {
+  test.skip(
+    process.env.PETI_LIVE_CAPTURE !== "1",
+    "Requires a running Ollama model",
+  );
+  test.setTimeout(90_000);
+  await login(page);
+  const before = await (await page.request.get("/api/orders")).json();
+  await page.getByRole("link", { name: "Order from a message" }).click();
+  await page
+    .getByLabel("Paste the retailer's order message")
+    .fill(
+      "bhaiya 5 peti biscuit chhota, 2 peti washing powder 1 kilo, chai patti 250 wala 1 peti",
+    );
+  await page.getByRole("button", { name: "Read message" }).click();
+  const biscuit = page.getByRole("group", { name: /biscuit chhota/i });
+  const detergent = page.getByRole("group", { name: /washing powder/i });
+  const tea = page.getByRole("group", { name: /chai patti/i });
+  await expect(biscuit).toBeVisible({ timeout: 68_000 });
+  await expect(biscuit.locator('option[value="SKU-BS-075"]')).toHaveText(
+    /Suggested:/,
+  );
+  await expect(detergent.locator('option[value="SKU-DT-1KG"]')).toHaveText(
+    /Suggested:/,
+  );
+  await expect(tea.locator('option[value="SKU-TE-250"]')).toHaveText(
+    /Suggested:.*Out of stock/,
+  );
+  await expect(tea.locator('option[value="SKU-TE-250"]')).toBeDisabled();
+  for (const [line, sku, cases] of [
+    [biscuit, "SKU-BS-075", "5"],
+    [detergent, "SKU-DT-1KG", "2"],
+  ] as const) {
+    await line.getByLabel("Choose product").selectOption(sku);
+    await expect(
+      line.getByRole("button", { name: "Add to cart" }),
+    ).toBeDisabled();
+    await line.getByLabel("Confirm whole cases").fill(cases);
+    await line.getByRole("button", { name: "Add to cart" }).click();
+  }
+  await page.getByRole("link", { name: "Review cart" }).click();
+  await expect(
+    page.getByRole("button", { name: "Confirm & place order" }),
+  ).toBeEnabled();
+  const after = await (await page.request.get("/api/orders")).json();
+  expect(after.total).toBe(before.total);
+});
+
+test("capture requires review before adding an order line to the cart", async ({
+  page,
+}) => {
+  await login(page);
+  const catalogue = await page.request.get("/api/catalogue");
+  const { items } = await catalogue.json();
+  const biscuit = items.find((p: { id: string }) => p.id === "SKU-BS-075");
+  await page.route("**/api/capture", (route) =>
+    route.fulfill({
+      json: {
+        products: items,
+        lines: [
+          {
+            source: "5 peti biscuit chhota",
+            candidates: [biscuit],
+            quantity: 5,
+            unit: "unknown",
+            confidence: "low",
+          },
+        ],
+      },
+    }),
+  );
+  await page.getByRole("link", { name: "Order from a message" }).click();
+  await page
+    .getByLabel("Paste the retailer's order message")
+    .fill("5 peti biscuit chhota");
+  await page.getByRole("button", { name: "Read message" }).click();
+  const add = page.getByRole("button", { name: "Add to cart" });
+  await expect(add).toBeDisabled();
+  await page.getByLabel("Choose product").selectOption("SKU-BS-075");
+  await expect(add).toBeDisabled();
+  await page.getByLabel("Confirm whole cases").fill("5");
+  await add.click();
+  await page.getByRole("link", { name: "Review cart" }).click();
+  await expect(
+    page.getByRole("button", { name: "Confirm & place order" }),
+  ).toBeEnabled();
+});
+
 test("manual order with schemes reaches desk and moves to packed", async ({
   page,
   browser,
@@ -49,6 +137,16 @@ test("manual order with schemes reaches desk and moves to packed", async ({
   ).toBeVisible();
   await office.getByRole("button", { name: "Mark as packed" }).click();
   await expect(office.locator(".page-heading .status")).toHaveText("Packed");
+  const downloadEvent = office.waitForEvent("download");
+  await office.getByRole("button", { name: "Download export CSV" }).click();
+  const download = await downloadEvent;
+  expect(download.suggestedFilename()).toBe(`peti-${id}-tally-staging.csv`);
+  const exportPath = new URL(`${url}/export`);
+  exportPath.pathname = "/api" + exportPath.pathname;
+  const csv = await (await office.request.get(exportPath.href)).text();
+  expect(csv).toContain('"SKU-BS-075"');
+  expect(csv).toContain('"SKU-DT-1KG"');
+  expect((await page.request.get(exportPath.href)).status()).toBe(403);
   await page.goto(url);
   await expect(page.locator(".page-heading .status")).toHaveText("Packed");
   await context.close();

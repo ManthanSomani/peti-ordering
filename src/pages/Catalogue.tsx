@@ -50,6 +50,9 @@ export function Catalogue() {
           </span>
           <h1 tabIndex={-1}>{t("title")}</h1>
           <p>{t("intro")}</p>
+          <Link className="button button-secondary" to="/capture">
+            {locale === "hi" ? "संदेश से ऑर्डर" : "Order from a message"}
+          </Link>
         </div>
         <span className="tax-tag">
           <Check size={15} />

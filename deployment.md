@@ -31,7 +31,23 @@ Run `npm run build`, then `npm start`. Assets are served from `dist/` by the sam
 - `DEMO_MODE`: explicitly enables synthetic account seeding and simulated OTP delivery.
 - `COOKIE_SECURE`: enables HTTPS-only session cookies.
 
-No AI key is needed for this milestone because AI extraction is not implemented. This section must be updated when an actual provider is integrated. Never commit `.env`, database files, API credentials or real personal data.
+- `OLLAMA_MODEL`: installed local model used for message extraction. Omit to disable extraction.
+- `OLLAMA_URL`: optional Ollama service URL. Defaults to the local Ollama endpoint.
+
+Start Ollama and install a model that supports structured output before setting the model name in your local environment. The server sends message text and product descriptions to this service. Use synthetic messages for the demo. [Ollama structured outputs](https://docs.ollama.com/capabilities/structured-outputs).
+
+Run the opt-in live acceptance test from PowerShell once Ollama is running and the chosen model is installed. Replace the model name if needed.
+
+```powershell
+$env:OLLAMA_MODEL = 'qwen2.5:3b'
+$env:PETI_LIVE_CAPTURE = '1'
+npm run build
+npm run test:e2e -- -g "live model captures"
+```
+
+This test uses an isolated demo database. It checks all three expected SKU suggestions, the unavailable tea, manual confirmation of case counts and that opening checkout creates no order.
+
+Never commit `.env`, database files, API credentials or real personal data.
 
 ## Reviewer access
 
@@ -49,4 +65,4 @@ Choose an account, request the six-digit code, then enter the code shown in the 
 
 ## Limitations for this draft
 
-AI capture, retailer-specific aliases, Tally export, hosted deployment and final TDD are still pending. UI cancellation and draft recovery are not implemented. Slow-3G three-second first-load target is not yet measured. No production scale, real SMS or accounting compatibility claim is made.
+The live model walkthrough, target-company Tally import test, hosted deployment and final TDD are pending. The app uses demo OTP delivery and in-memory cart drafts. The slow-3G first-load target still needs measurement.

@@ -13,7 +13,11 @@ A full-stack take-home for the FMCG distributor brief. **Current milestone: foun
 
 ## Not implemented yet
 
-Actual AI capture/review and retailer alias learning, Tally export, optional offline/photo/voice features, hosted deployment, public GitHub remote, final PDF/Word TDD and submission ZIP. No buttons pretend these features exist. Cart is currently in memory and is cleared on refresh/sign-out; draft persistence is a next-stage improvement. Cancellation is API-tested but not exposed in the UI.
+Optional offline/photo/voice features, hosted deployment, public GitHub remote, final PDF/Word TDD and submission ZIP remain pending. Cart is currently in memory and is cleared on refresh or sign-out.
+
+Desk staff can cancel a confirmed order or process and pack it. Open a packed order to download its CSV for Tally mapping. The company-specific Tally import still needs validation.
+
+Message capture and retailer-specific aliases are implemented. Configure Ollama using `deployment.md` to try capture. Automated checks use a fixture response. The live sample message walkthrough is pending.
 
 ## Run locally
 
