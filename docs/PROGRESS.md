@@ -39,4 +39,6 @@ The three-second target was missed in this simulation. The result applies to the
 
 Phase 6 covers deployment if chosen, public repository, TDD and submission ZIP.
 
+The public repository is available and the local Docker Compose demo was verified on 8 November 2026. The Ollama model downloaded automatically into its volume. Chrome passed live capture of the assignment message and the mobile checkout through desk CSV export. The live capture test took 37.2 seconds including container cold start. Three saved orders retained their statuses across an app container restart. The final TDD and submission ZIP remain pending.
+
 The cart draft lives in browser memory and refreshing clears it. The OTP is displayed on screen in demo mode. SQLite requires a persistent volume for hosted deployment. Production load still needs measurement.

@@ -1,6 +1,6 @@
 # Peti — retailer ordering
 
-A full-stack take-home for the FMCG distributor brief. **Current milestone: foundation and manual ordering. Not submission-ready yet.**
+A full-stack take-home for the FMCG distributor brief.
 
 ## Working now
 
@@ -13,13 +13,17 @@ A full-stack take-home for the FMCG distributor brief. **Current milestone: foun
 
 ## Not implemented yet
 
-Optional offline/photo/voice features, hosted deployment, public GitHub remote, final PDF/Word TDD and submission ZIP remain pending. Cart is currently in memory and is cleared on refresh or sign-out.
+Optional offline/photo/voice features, hosted deployment, the final PDF/Word TDD and the submission ZIP remain pending. Cart is currently in memory and is cleared on refresh or sign-out.
 
 Desk staff can cancel a confirmed order or process and pack it. Open a packed order to download its CSV for Tally mapping. The company-specific Tally import still needs validation.
 
 Message capture and retailer-specific aliases are implemented. The full assignment message passed a live Chrome walkthrough using Ollama and Qwen 2.5 3B on CPU. Configure Ollama using `deployment.md` to try capture.
 
-## Run locally
+## Run with Docker
+
+Start Docker and run `docker compose up --build` from the repository root. Open [http://localhost:3000](http://localhost:3000) after Peti starts. Compose runs Ollama and pulls the model on first use. The model and SQLite database are kept in separate Docker volumes. See [deployment.md](deployment.md) for first-run details and demo accounts.
+
+## Run natively
 
 Requires Node.js 22.13+ (developed on 22.22) and npm.
 

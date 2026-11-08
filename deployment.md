@@ -1,14 +1,30 @@
 # Deployment instructions — working draft
 
-Status: local application only. No hosted URL or public GitHub remote yet. This draft is not the final submission package.
+The [public GitHub repository](https://github.com/ManthanSomani/peti-ordering) is available. The Docker Compose demo was verified locally with live AI capture, checkout, CSV export and a container restart.
 
 ## Prerequisites
+
+For the container demo, use Docker with Compose and a running Linux container engine. Internet access is needed for the first build and model download. Follow the Docker steps below, or use the native setup if you prefer running Node and Ollama directly.
 
 - Node.js 22.13 or newer; Node 22.22 was used for development.
 - npm and a writable local filesystem.
 - Google Chrome to run browser tests (not needed to run the app).
 
-## Local setup
+## Docker demo
+
+From the repository root, run:
+
+```sh
+docker compose up --build
+```
+
+Open [Peti on localhost](http://localhost:3000) once the app logs that it is running. Use the demo accounts listed below. Compose starts Ollama, downloads Qwen 2.5 3B if needed, then starts Peti. The first run downloads the base images, npm packages and approximately 1.9 GB of model data. Inference runs on CPU and cold model loading can take longer than subsequent requests. The app uses the internal Ollama endpoint without API credentials.
+
+On x86-64, the Ollama image checked during development adds about 3.4 GB of compressed downloads. Allow several gigabytes of additional disk space for unpacked image layers. If you already have Ollama and the model installed on your machine, the native setup below can reuse them.
+
+Run `docker compose down` to stop the demo. Named volumes retain the database and the model for the next run. If port 3000 is occupied, set `PETI_PORT` to an available port before starting Compose and open that port on `localhost`.
+
+## Native local setup
 
 1. Obtain the repository and open its root directory.
 2. Run `npm ci`.
@@ -29,7 +45,7 @@ Run `npm run build`, then `npm start`. Assets are served from `dist/` by the sam
 3. Generate an HTTPS domain, set `APP_ORIGIN` to that exact origin and enable `COOKIE_SECURE`. Enable `DEMO_MODE` for the seeded reviewer accounts. Railway supplies `PORT` and the container listens on all interfaces.
 4. Verify the health endpoint and sign in as both roles. Place a test order, pack it, download the CSV, then confirm the data survives a restart.
 
-The verified Ollama model runs on the local machine. A hosted AI demo requires a separate reachable Ollama service. A private service with persistent model storage is an option, subject to capacity, usage cost and live verification. Keep the model endpoint on a private network. When deploying only the app service, leave `OLLAMA_MODEL` unset and direct reviewers to the local AI walkthrough.
+The Docker demo is the verified reviewer setup. A public AI deployment would require a reachable inference service. The optional Railway plan above is unverified.
 
 Railway references: [persistent volumes](https://docs.railway.com/volumes) and [deployment configuration](https://docs.railway.com/config-as-code/reference).
 

@@ -1,0 +1,48 @@
+x-ollama-image: &ollama-image ollama/ollama@sha256:0e59999e0e8f9fd4e704bd788a89b7e4cad399367fb1365f8c102ac662288761
+
+services:
+  peti:
+    build: .
+    ports:
+      - "127.0.0.1:${PETI_PORT:-3000}:3000"
+    environment:
+      PORT: "3000"
+      APP_ORIGIN: "http://localhost:${PETI_PORT:-3000}"
+      DATABASE_PATH: /data/peti.sqlite
+      DEMO_MODE: "true"
+      COOKIE_SECURE: "false"
+      OLLAMA_URL: http://ollama:11434
+      OLLAMA_MODEL: qwen2.5:3b
+      PETI_OLLAMA_CPU: "1"
+    volumes:
+      - peti-data:/data
+    depends_on:
+      model:
+        condition: service_completed_successfully
+
+  ollama:
+    image: *ollama-image
+    environment:
+      OLLAMA_HOST: "0.0.0.0:11434"
+    volumes:
+      - ollama-models:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 5s
+      timeout: 5s
+      retries: 24
+
+  model:
+    image: *ollama-image
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      ["ollama show qwen2.5:3b >/dev/null 2>&1 || ollama pull qwen2.5:3b"]
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    depends_on:
+      ollama:
+        condition: service_healthy
+
+volumes:
+  peti-data:
+  ollama-models:

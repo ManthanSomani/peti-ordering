@@ -1,6 +1,8 @@
 # Peti Technical Design Document
 
-Working manuscript for the submission document. Insert the public GitHub URL at the top and the hosted URL if deployed before generating the final PDF or Word file.
+[Public GitHub repository](https://github.com/ManthanSomani/peti-ordering)
+
+Working manuscript for the submission document. Add the hosted URL after deployment verification.
 
 ## Scope
 
@@ -9,6 +11,8 @@ Peti is a bilingual ordering demo for FMCG retailers and an office order desk. A
 ## Architecture
 
 React and TypeScript render the retailer and desk interfaces. One Express service serves the built frontend and API on the same origin. This keeps cookies, routing and deployment together. SQLite stores the catalogue, sessions and orders. One service instance owns writes and uses a persistent volume when hosted. The local demo can run with no database account.
+
+Docker Compose packages the app and local inference together. A setup service loads the model files into the Ollama volume before Peti starts. Separate named volumes retain the model and SQLite data. The reviewer accesses Peti from localhost and inference runs on the Compose network.
 
 ## Data and order workflow
 
