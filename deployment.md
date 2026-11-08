@@ -65,4 +65,4 @@ Choose an account, request the six-digit code, then enter the code shown in the 
 
 ## Limitations for this draft
 
-The live model walkthrough, target-company Tally import test, hosted deployment and final TDD are pending. The app uses demo OTP delivery and in-memory cart drafts. The slow-3G first-load target still needs measurement.
+The live model walkthrough, target-company Tally import test, hosted deployment and final TDD are pending. The app uses demo OTP delivery and in-memory cart drafts. The compressed production build reached a 4.545-second median in the local slow-3G simulation, above the three-second target. See docs/PROGRESS.md for the measurement conditions.

@@ -28,6 +28,17 @@ Live verification was attempted on 8 November 2026. Both Windows installer attem
 
 Phase 4 is complete locally. The desk can cancel a confirmed order with explicit confirmation, or process and pack it before downloading a staging CSV. The build, 21 domain/API tests and four Chrome walkthroughs passed. The export checks cover saved scheme values, formula escaping, rejection of invalid or cancelled orders, actual browser download and retailer access denial. Target-company Tally import requires the mappings in DECISIONS.md.
 
-Later phases cover performance measurement, final quality checks, deployment if chosen, public repository, TDD and submission ZIP.
+Phase 5 verification is complete locally. Chrome exercised a 360px retailer checkout through desktop desk packing and CSV download, catalogue retry and empty states, English/Hindi layout and axe checks, keyboard sign-in, and role isolation. The tests use a separate seeded database. Environment files and SQLite files are excluded from Git.
 
-The cart draft lives in browser memory and refreshing clears it. The OTP is displayed on screen in demo mode. SQLite requires a persistent volume for hosted deployment. Production load and the slow-3G target still need measurement.
+The opt-in cold catalogue benchmark uses the production server, an authenticated retailer, a 360 × 800 viewport, disabled browser cache, 400 ms latency and 400 kbps upload/download in Chrome. It measures navigation start to the first enabled Add button. No CPU throttling was applied.
+
+| Build        | Three runs                | Median  |
+| ------------ | ------------------------- | ------- |
+| Uncompressed | 9.071 s, 9.138 s, 9.147 s | 9.138 s |
+| Compressed   | 4.378 s, 4.550 s, 4.545 s | 4.545 s |
+
+The three-second target was missed in this simulation. The result applies to the local production build under the stated test profile. Hosted performance and physical-device performance still need measurement. Run the benchmark with `PETI_PERF=1` and `npm run test:e2e -- -g "cold mobile catalogue benchmark"` after building.
+
+Phase 6 covers deployment if chosen, public repository, TDD and submission ZIP.
+
+The cart draft lives in browser memory and refreshing clears it. The OTP is displayed on screen in demo mode. SQLite requires a persistent volume for hosted deployment. Production load still needs measurement.

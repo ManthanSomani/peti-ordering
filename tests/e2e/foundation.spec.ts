@@ -99,10 +99,38 @@ test("capture requires review before adding an order line to the cart", async ({
   ).toBeEnabled();
 });
 
-test("manual order with schemes reaches desk and moves to packed", async ({
+test("cold mobile catalogue benchmark", async ({ page }) => {
+  test.skip(process.env.PETI_PERF !== "1", "Opt-in network benchmark");
+  await page.setViewportSize({ width: 360, height: 800 });
+  await login(page);
+  const session = await page.context().newCDPSession(page);
+  await session.send("Network.enable");
+  await session.send("Network.setCacheDisabled", { cacheDisabled: true });
+  await session.send("Network.emulateNetworkConditions", {
+    offline: false,
+    latency: 400,
+    downloadThroughput: 400_000 / 8,
+    uploadThroughput: 400_000 / 8,
+  });
+  const timings: number[] = [];
+  for (let run = 0; run < 3; run++) {
+    await page.goto("/catalogue", { waitUntil: "commit" });
+    await expect(
+      page.getByRole("button", {
+        name: "Add case: Glucose biscuits 75 g",
+        exact: true,
+      }),
+    ).toBeEnabled({ timeout: 15_000 });
+    timings.push(Math.round(await page.evaluate(() => performance.now())));
+  }
+  console.log("Cold catalogue to enabled add button (ms):", timings.join(", "));
+});
+
+test("mobile order with schemes reaches desktop desk and exports", async ({
   page,
   browser,
 }) => {
+  await page.setViewportSize({ width: 360, height: 800 });
   await login(page);
   await page
     .getByRole("button", {
@@ -120,6 +148,11 @@ test("manual order with schemes reaches desk and moves to packed", async ({
   await page.locator("#qty-SKU-BS-075").fill("10");
   await page.locator("#qty-SKU-DT-1KG").fill("5");
   await expect(page.locator(".cart-summary")).toContainText("₹304.50");
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
   await expect(
     page.getByRole("button", { name: "Confirm & place order" }),
   ).toBeEnabled();

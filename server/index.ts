@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { resolve } from "node:path";
 import express from "express";
+import compression from "compression";
 import { openDatabase, seedDatabase } from "./database";
 import { createApp } from "./app";
 
@@ -16,6 +17,7 @@ const app = createApp(db, {
   production,
 });
 if (production) {
+  app.use(compression());
   app.use(express.static(resolve("dist"), { index: false }));
   app.get("/{*path}", (_req, res) => res.sendFile(resolve("dist/index.html")));
 } else {
