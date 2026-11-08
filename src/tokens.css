@@ -1,0 +1,22 @@
+/* Generated from DESIGN.md. Run npm run tokens. */
+:root {
+  --color-primary: #155e4b;
+  --color-primaryHover: #104b3c;
+  --color-ink: #192d29;
+  --color-muted: #5d6e68;
+  --color-background: #f5f7f5;
+  --color-surface: #ffffff;
+  --color-line: #d9e2dc;
+  --color-soft: #eaf3ed;
+  --color-accent: #985216;
+  --color-accentSoft: #fff2d9;
+  --color-danger: #af3030;
+  --color-dangerSoft: #fff0ed;
+  --font-display: Manrope Variable, Noto Sans Devanagari, sans-serif;
+  --font-body: Noto Sans Devanagari, Segoe UI, sans-serif;
+  --radius-control: 10px;
+  --radius-panel: 16px;
+  --space-small: 8px;
+  --space-medium: 16px;
+  --space-large: 24px;
+}

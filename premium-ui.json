@@ -1,0 +1,17 @@
+{
+  "profile": "product-admin",
+  "sourceRoots": ["src"],
+  "locale": "en-IN",
+  "canonicalMap": "UX-CONTRACT.md",
+  "requiredCapabilities": ["Form", "Scrollbar", "Toast", "CRUD"],
+  "requiredCommands": ["unit", "e2e", "tokens"],
+  "commands": {
+    "unit": "npm test",
+    "e2e": "npm run test:e2e",
+    "tokens": "npm run tokens:check"
+  },
+  "evidence": {
+    "crudFullFlow": "tests/e2e/foundation.spec.ts",
+    "failurePaths": "tests/api.test.ts"
+  }
+}

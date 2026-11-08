@@ -6,13 +6,13 @@ PROJECT_PLAN.md owns scope; docs/DECISIONS.md resolves implementation assumption
 
 ## Canonical UI Map
 
-| Capability | Canonical owner | Source of truth | Allowed variants | Verification |
-| --- | --- | --- | --- | --- |
-| Form | src/components/ui.tsx Field / Button | This contract | sign-in, quantity | tests/e2e/foundation.spec.ts |
-| Scrollbar | src/styles.css global baseline | DESIGN.md | table geometry only | browser computed style |
-| Toast | src/components/ui.tsx Notice | This contract | inline success/error/info; no transient toast | browser feedback |
-| CRUD | server/app.ts and src/api.ts | docs/DECISIONS.md | create order, status update | tests/api.test.ts |
-| Select/Listbox | native select if introduced | This contract | browser-owned popup | browser keyboard checks |
+| Capability     | Canonical owner                      | Source of truth   | Allowed variants                              | Verification                 |
+| -------------- | ------------------------------------ | ----------------- | --------------------------------------------- | ---------------------------- |
+| Form           | src/components/ui.tsx Field / Button | This contract     | sign-in, quantity                             | tests/e2e/foundation.spec.ts |
+| Scrollbar      | src/styles.css global baseline       | DESIGN.md         | table geometry only                           | browser computed style       |
+| Toast          | src/components/ui.tsx Notice         | This contract     | inline success/error/info; no transient toast | browser feedback             |
+| CRUD           | server/app.ts and src/api.ts         | docs/DECISIONS.md | create order, status update                   | tests/api.test.ts            |
+| Select/Listbox | native select if introduced          | This contract     | browser-owned popup                           | browser keyboard checks      |
 
 No selection table, date picker or modal in this phase; no equivalent local owners permitted.
 

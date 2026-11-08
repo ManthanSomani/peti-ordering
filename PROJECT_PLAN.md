@@ -1,6 +1,6 @@
 # FMCG retailer ordering — development and delivery plan
 
-Status: planning; no application has been implemented or verified yet.
+Status: foundation and manual-ordering milestone implemented. Actual AI, aliases, export and submission packaging remain pending. See docs/PROGRESS.md for verification evidence.
 Source: the assignment brief and Problem 2 supplied by the user in this chat.
 Selected project: FMCG distributor's retailer ordering app with AI order capture.
 
@@ -46,23 +46,23 @@ Source code lives in GitHub; do not put the whole repository in the submission Z
 
 ## 3. Required acceptance criteria
 
-| ID | Requirement | Evidence of completion |
-| --- | --- | --- |
-| R01 | Authentication and roles | Retailer and desk can sign in; backend enforces permissions. |
-| R02 | Retailer catalogue | Product images, pack sizes, retailer prices, current schemes and availability are readable on mobile. |
-| R03 | Cart and order | Server computes prices, validates units/stock and saves an order only on explicit human confirmation. |
-| R04 | Scheme engine | Free goods and quantity discounts apply predictably at thresholds; breakdown is visible and tested. |
-| R05 | Actual AI text capture | Real model-assisted extraction of supplied-style messages into structured proposals; not a canned response. |
-| R06 | Uncertainty handling | Each extracted line retains original words, confidence and two alternative SKU suggestions where valid candidates exist; unclear units block confirmation. |
-| R07 | Context and correction | Matching uses retailer history and scoped aliases; authorised desk corrections can become aliases for that retailer. |
-| R08 | Order desk | Authorised staff can inspect orders, handle issues and make supported state changes; retailer can see the resulting order status. |
-| R09 | Tally export boundary | A downloadable, documented export works; fixture/contract validation is recorded. Do not claim verified Tally import unless actually tested. |
-| R10 | Privacy | Retailers cannot access another retailer's prices, credit, orders, aliases or exports by changing IDs or calling APIs. |
-| R11 | Language and UX | Hindi/English UI for core journeys, large tap targets, consistent responsive design, loading/empty/error states. |
-| R12 | Price clarity | Price unit, case size, scheme savings and GST inclusion/exclusion are explicit and consistent. |
-| R13 | Performance | Measure first-load behaviour under documented slow-3G/mobile conditions against the brief's under-three-second target. Report actual results. |
-| R14 | Seeded demonstration | All provided SKUs plus clearly labelled synthetic examples support success, ambiguity, scheme and out-of-stock paths. |
-| R15 | Submission | Public repo link, TDD and deployment instructions are complete and final ZIP is checked. |
+| ID  | Requirement              | Evidence of completion                                                                                                                                     |
+| --- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| R01 | Authentication and roles | Retailer and desk can sign in; backend enforces permissions.                                                                                               |
+| R02 | Retailer catalogue       | Product images, pack sizes, retailer prices, current schemes and availability are readable on mobile.                                                      |
+| R03 | Cart and order           | Server computes prices, validates units/stock and saves an order only on explicit human confirmation.                                                      |
+| R04 | Scheme engine            | Free goods and quantity discounts apply predictably at thresholds; breakdown is visible and tested.                                                        |
+| R05 | Actual AI text capture   | Real model-assisted extraction of supplied-style messages into structured proposals; not a canned response.                                                |
+| R06 | Uncertainty handling     | Each extracted line retains original words, confidence and two alternative SKU suggestions where valid candidates exist; unclear units block confirmation. |
+| R07 | Context and correction   | Matching uses retailer history and scoped aliases; authorised desk corrections can become aliases for that retailer.                                       |
+| R08 | Order desk               | Authorised staff can inspect orders, handle issues and make supported state changes; retailer can see the resulting order status.                          |
+| R09 | Tally export boundary    | A downloadable, documented export works; fixture/contract validation is recorded. Do not claim verified Tally import unless actually tested.               |
+| R10 | Privacy                  | Retailers cannot access another retailer's prices, credit, orders, aliases or exports by changing IDs or calling APIs.                                     |
+| R11 | Language and UX          | Hindi/English UI for core journeys, large tap targets, consistent responsive design, loading/empty/error states.                                           |
+| R12 | Price clarity            | Price unit, case size, scheme savings and GST inclusion/exclusion are explicit and consistent.                                                             |
+| R13 | Performance              | Measure first-load behaviour under documented slow-3G/mobile conditions against the brief's under-three-second target. Report actual results.              |
+| R14 | Seeded demonstration     | All provided SKUs plus clearly labelled synthetic examples support success, ambiguity, scheme and out-of-stock paths.                                      |
+| R15 | Submission               | Public repo link, TDD and deployment instructions are complete and final ZIP is checked.                                                                   |
 
 When fewer than two valid alternatives exist, show the available candidates and explain the limit; do not invent or pad suggestions with unrelated products. Expand synthetic catalogue deliberately to demonstrate meaningful alternatives, and disclose additions.
 
@@ -106,21 +106,21 @@ Proposed data entities: users, retailers, user-to-retailer memberships, products
 
 ## 7. Assumption register — provisional, not established client facts
 
-| ID | Proposed decision / unresolved issue |
-| --- | --- |
-| A01 | Dealer prices are tentatively per piece; the brief does not explicitly specify this. Case price = pieces per case x dealer price. Confirm and label before implementing. |
-| A02 | Tax inclusion and SKU tax rates are unspecified. Choose and document an internally consistent demo convention; do not invent statutory rates or claim tax compliance. |
-| A03 | Define whether loose-piece ordering is allowed. Initial proposal: case-only orders; detected piece requests require explicit resolution and are not silently rounded. |
-| A04 | Define the threshold basis for schemes. Initial proposal: biscuit free cases = floor(paid cases / 10), same SKU, with all paid and free cases consuming stock. |
-| A05 | Initial proposal: 3% detergent discount applies to the full eligible detergent line at five or more paid cases. Document rounding and whether schemes can stack. |
-| A06 | Initial proposal: no stacking, one seeded active scheme per SKU; do not accidentally multiply schemes. |
-| A07 | Define inventory timing and cancellations. Initial proposal: reserve/decrement once at successful order confirmation, reject insufficiency, release once on cancellation. |
-| A08 | Low/medium/high confidence is a documented heuristic/model assessment, not a calibrated probability. Evaluate against labelled examples. |
-| A09 | Establish safe alias learning: authorised desk correction, retailer scope, audit trail; resolve collisions rather than silently remapping existing aliases. |
+| ID  | Proposed decision / unresolved issue                                                                                                                                        |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A01 | Dealer prices are tentatively per piece; the brief does not explicitly specify this. Case price = pieces per case x dealer price. Confirm and label before implementing.    |
+| A02 | Tax inclusion and SKU tax rates are unspecified. Choose and document an internally consistent demo convention; do not invent statutory rates or claim tax compliance.       |
+| A03 | Define whether loose-piece ordering is allowed. Initial proposal: case-only orders; detected piece requests require explicit resolution and are not silently rounded.       |
+| A04 | Define the threshold basis for schemes. Initial proposal: biscuit free cases = floor(paid cases / 10), same SKU, with all paid and free cases consuming stock.              |
+| A05 | Initial proposal: 3% detergent discount applies to the full eligible detergent line at five or more paid cases. Document rounding and whether schemes can stack.            |
+| A06 | Initial proposal: no stacking, one seeded active scheme per SKU; do not accidentally multiply schemes.                                                                      |
+| A07 | Define inventory timing and cancellations. Initial proposal: reserve/decrement once at successful order confirmation, reject insufficiency, release once on cancellation.   |
+| A08 | Low/medium/high confidence is a documented heuristic/model assessment, not a calibrated probability. Evaluate against labelled examples.                                    |
+| A09 | Establish safe alias learning: authorised desk correction, retailer scope, audit trail; resolve collisions rather than silently remapping existing aliases.                 |
 | A10 | Exact Tally version, ledger mappings and import contract are absent. Select a documented export/mocked adapter boundary; a generic CSV alone is not proof of compatibility. |
-| A11 | Demo identities, brands, extra SKUs, images and histories are fictional or appropriately licensed assets. No implied real client endorsement. |
-| A12 | Define proposed order states and editing policy; preserve confirmed snapshots and log authorised changes. |
-| A13 | Authentication delivery can be mocked, but access control must be real. Select a clearly explained demo sign-in method. |
+| A11 | Demo identities, brands, extra SKUs, images and histories are fictional or appropriately licensed assets. No implied real client endorsement.                               |
+| A12 | Define proposed order states and editing policy; preserve confirmed snapshots and log authorised changes.                                                                   |
+| A13 | Authentication delivery can be mocked, but access control must be real. Select a clearly explained demo sign-in method.                                                     |
 
 ## 8. Development phases and exit gates
 
@@ -192,11 +192,11 @@ Exit: a verified submission ZIP and repository/live links are ready for the user
 
 Required source SKUs:
 
-| SKU | Description | Dealer price Rs | Stock cases | Scheme |
-| --- | --- | ---: | ---: | --- |
-| SKU-BS-075 | Glucose biscuit 75 g, case of 96 | 8.10 | 340 | Buy 10 cases get 1 free |
-| SKU-DT-1KG | Detergent powder 1 kg, case of 20 | 101.50 | 85 | 3% off 5 or more cases |
-| SKU-TE-250 | Tea leaf 250 g, case of 40 | 118.00 | 0 | None |
+| SKU        | Description                       | Dealer price Rs | Stock cases | Scheme                  |
+| ---------- | --------------------------------- | --------------: | ----------: | ----------------------- |
+| SKU-BS-075 | Glucose biscuit 75 g, case of 96  |            8.10 |         340 | Buy 10 cases get 1 free |
+| SKU-DT-1KG | Detergent powder 1 kg, case of 20 |          101.50 |          85 | 3% off 5 or more cases  |
+| SKU-TE-250 | Tea leaf 250 g, case of 40        |          118.00 |           0 | None                    |
 
 Supplied text: `bhaiya 5 peti biscuit chhota, 2 peti washing powder 1 kilo, chai patti 250 wala 1 peti`
 
@@ -214,8 +214,8 @@ Performance targets and business success numbers in the brief are not achieved o
 ## 10. Progress tracking
 
 - [x] Brief reviewed; project selected by user; plan saved.
-- [ ] Phase 1: design and foundation.
-- [ ] Phase 2: manual ordering.
+- [x] Phase 1: design and local foundation (AI-provider setup deliberately deferred to Phase 3; Tally compatibility remains unclaimed).
+- [x] Phase 2: manual ordering, scheme logic, atomic stock checks and role isolation.
 - [ ] Phase 3: AI capture.
 - [ ] Phase 4: desk and export.
 - [ ] Phase 5: quality verification.

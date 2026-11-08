@@ -3,34 +3,54 @@ version: alpha
 name: Peti
 description: A clear, bilingual ordering counter for Jabalpur kirana retailers.
 colors:
-  primary: '#155e4b'
-  primaryHover: '#104b3c'
-  ink: '#192d29'
-  muted: '#5d6e68'
-  background: '#f5f7f5'
-  surface: '#ffffff'
-  line: '#d9e2dc'
-  soft: '#eaf3ed'
-  accent: '#985216'
-  accentSoft: '#fff2d9'
-  danger: '#af3030'
-  dangerSoft: '#fff0ed'
+  primary: "#155e4b"
+  primaryHover: "#104b3c"
+  ink: "#192d29"
+  muted: "#5d6e68"
+  background: "#f5f7f5"
+  surface: "#ffffff"
+  line: "#d9e2dc"
+  soft: "#eaf3ed"
+  accent: "#985216"
+  accentSoft: "#fff2d9"
+  danger: "#af3030"
+  dangerSoft: "#fff0ed"
 typography:
   display:
-    fontFamily: 'Manrope Variable, Noto Sans Devanagari, sans-serif'
+    fontFamily: "Manrope Variable, Noto Sans Devanagari, sans-serif"
   body:
-    fontFamily: 'Noto Sans Devanagari, Segoe UI, sans-serif'
+    fontFamily: "Noto Sans Devanagari, Segoe UI, sans-serif"
 rounded:
-  control: '10px'
-  panel: '16px'
+  control: "10px"
+  panel: "16px"
 spacing:
-  small: '8px'
-  medium: '16px'
-  large: '24px'
+  small: "8px"
+  medium: "16px"
+  large: "24px"
 components:
   button:
-    backgroundColor: '#155e4b'
-    color: '#ffffff'
+    backgroundColor: "#155e4b"
+    textColor: "#ffffff"
+  buttonHover:
+    backgroundColor: "#104b3c"
+    textColor: "#ffffff"
+  body:
+    backgroundColor: "#f5f7f5"
+    textColor: "#192d29"
+  secondaryText:
+    backgroundColor: "#ffffff"
+    textColor: "#5d6e68"
+  selection:
+    backgroundColor: "#eaf3ed"
+    textColor: "#155e4b"
+  scheme:
+    backgroundColor: "#fff2d9"
+    textColor: "#985216"
+  error:
+    backgroundColor: "#fff0ed"
+    textColor: "#af3030"
+  divider:
+    backgroundColor: "#d9e2dc"
 ---
 
 ## Overview
