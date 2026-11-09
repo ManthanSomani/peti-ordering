@@ -29,6 +29,44 @@ beforeEach(() => {
   app = createApp(db, { demo: true, origin, secure: false });
 });
 afterEach(() => db.close());
+it("confirms a simulated message once for its selected retailer", async () => {
+  const desk = await login("desk@peti.demo");
+  const retailer = await login();
+  const id = randomUUID();
+  const intake = { id, message: "5 peti biscuit chhota" };
+  await retailer.get("/api/inbox").expect(403);
+  await desk.post("/api/inbox").set(headers).send(intake).expect(201);
+  await desk.post("/api/inbox").set(headers).send(intake).expect(200);
+  const path = `/api/inbox/${id}`;
+  const input = { retailerId: "r1", items: [{ sku: "SKU-BS-075", cases: 5 }] };
+  const quote = await desk
+    .post(`${path}/quote`)
+    .set(headers)
+    .send(input)
+    .expect(200);
+  expect((await retailer.get("/api/orders")).body.total).toBe(1);
+  const confirmation = { ...input, expectedTotalPaise: quote.body.totalPaise };
+  const order = await desk
+    .post(`${path}/confirm`)
+    .set(headers)
+    .send(confirmation)
+    .expect(201);
+  await desk
+    .post(`${path}/confirm`)
+    .set(headers)
+    .send(confirmation)
+    .expect(409);
+  await desk
+    .post(`${path}/confirm`)
+    .set(headers)
+    .send({ ...confirmation, retailerId: "r2" })
+    .expect(409);
+  await retailer.get(`/api/orders/${order.body.id}`).expect(200);
+  expect((await retailer.get("/api/orders")).body.total).toBe(2);
+  expect((await desk.get("/api/inbox")).body.messages).toMatchObject([
+    { id, orderId: order.body.id },
+  ]);
+});
 it("grounds capture in the catalogue and keeps learned aliases retailer-scoped", async () => {
   const a = await login();
   const b = await login("verma@peti.demo");

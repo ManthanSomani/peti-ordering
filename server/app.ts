@@ -19,7 +19,7 @@ import { catalogue } from "./database";
 import { orderExport } from "./order-export";
 import { captureOrder, normalizeAlias } from "./capture";
 import { DomainError, priceCart } from "../shared/pricing";
-import type { User, Order, Quote, Status } from "../shared/types";
+import type { User, Order, Quote, Status, CartItem } from "../shared/types";
 
 const hash = (value: string) =>
   createHash("sha256").update(value).digest("hex");
@@ -275,12 +275,10 @@ export function createApp(db: DatabaseSync, config: Config) {
       pages,
     });
   });
-  app.post("/api/capture", retailer, async (req, res) => {
-    const { message } = z
-      .object({ message: z.string().trim().min(1).max(3000) })
-      .strict()
-      .parse(req.body);
-    const retailerId = res.locals.user.retailerId;
+  const messageSchema = z
+    .object({ message: z.string().trim().min(1).max(3000) })
+    .strict();
+  function captureForRetailer(message: string, retailerId: string) {
     const products = catalogue(db, retailerId);
     const history = db
       .prepare(
@@ -299,7 +297,98 @@ export function createApp(db: DatabaseSync, config: Config) {
     const aliases = db
       .prepare("SELECT phrase, sku FROM retailer_aliases WHERE retailer_id=?")
       .all(retailerId) as { phrase: string; sku: string }[];
-    res.json(await captureOrder(message, products, { recentSkus, aliases }));
+    return captureOrder(message, products, { recentSkus, aliases });
+  }
+  app.post("/api/capture", retailer, async (req, res) => {
+    const { message } = messageSchema.parse(req.body);
+    res.json(await captureForRetailer(message, res.locals.user.retailerId));
+  });
+
+  function pendingMessage(id: string) {
+    const row = db
+      .prepare(
+        "SELECT message, dismissed, order_id FROM message_inbox WHERE id=?",
+      )
+      .get(id);
+    if (!row) throw new DomainError("NOT_FOUND", "Message not found.", 404);
+    if (row.dismissed || row.order_id)
+      throw new DomainError(
+        "MESSAGE_RESOLVED",
+        "This message has already been handled.",
+        409,
+      );
+    return String(row.message);
+  }
+  const retailerIdSchema = z.string().min(1).max(80);
+  function requireRetailer(id: string) {
+    if (!db.prepare("SELECT id FROM retailers WHERE id=?").get(id))
+      throw new DomainError("NOT_FOUND", "Retailer not found.", 404);
+  }
+  app.get("/api/inbox", desk, (_req, res) => {
+    res.json({
+      messages: db
+        .prepare(
+          "SELECT id, message, created_at AS createdAt, order_id AS orderId, dismissed FROM message_inbox ORDER BY created_at DESC LIMIT 50",
+        )
+        .all(),
+      retailers: db
+        .prepare("SELECT id, shop FROM retailers ORDER BY shop")
+        .all(),
+      simulation: config.demo,
+    });
+  });
+  app.post("/api/inbox", desk, (req, res) => {
+    if (!config.demo)
+      throw new DomainError(
+        "FORBIDDEN",
+        "Simulation is available in demo mode only.",
+        403,
+      );
+    const { message, id } = messageSchema
+      .extend({ id: z.string().uuid() })
+      .parse(req.body);
+    const prior = db
+      .prepare("SELECT message FROM message_inbox WHERE id=?")
+      .get(id);
+    if (prior && prior.message !== message)
+      throw new DomainError(
+        "IDEMPOTENCY_CONFLICT",
+        "This message ID is already in use.",
+        409,
+      );
+    if (!prior)
+      db.prepare(
+        "INSERT INTO message_inbox(id,message,created_at) VALUES(?,?,?)",
+      ).run(id, message, new Date().toISOString());
+    res.status(prior ? 200 : 201).json({ id });
+  });
+  app.post("/api/inbox/:id/draft", desk, async (req, res) => {
+    const { retailerId } = z
+      .object({ retailerId: retailerIdSchema })
+      .strict()
+      .parse(req.body);
+    requireRetailer(retailerId);
+    res.json(
+      await captureForRetailer(
+        pendingMessage(String(req.params.id)),
+        retailerId,
+      ),
+    );
+  });
+  app.post("/api/inbox/:id/quote", desk, (req, res) => {
+    const { retailerId, items } = z
+      .object({ retailerId: retailerIdSchema, items: cartSchema })
+      .strict()
+      .parse(req.body);
+    pendingMessage(String(req.params.id));
+    requireRetailer(retailerId);
+    res.json(priceCart(items, catalogue(db, retailerId)));
+  });
+  app.post("/api/inbox/:id/dismiss", desk, (req, res) => {
+    const id = String(req.params.id);
+    pendingMessage(id);
+    db.prepare("UPDATE message_inbox SET dismissed=1 WHERE id=?").run(id);
+    res.json({ dismissed: true });
   });
 
   app.post("/api/orders/:id/aliases", desk, (req, res) => {
@@ -336,16 +425,53 @@ export function createApp(db: DatabaseSync, config: Config) {
     res.json(priceCart(items, catalogue(db, res.locals.user.retailerId)));
   });
 
+  const orderSchema = z
+    .object({
+      items: cartSchema,
+      idempotencyKey: z.string().uuid(),
+      expectedTotalPaise: z.number().int().nonnegative(),
+    })
+    .strict();
   app.post("/api/orders", retailer, (req, res) => {
-    const { items, idempotencyKey, expectedTotalPaise } = z
-      .object({
-        items: cartSchema,
-        idempotencyKey: z.string().uuid(),
-        expectedTotalPaise: z.number().int().nonnegative(),
-      })
-      .strict()
+    const { items, idempotencyKey, expectedTotalPaise } = orderSchema.parse(
+      req.body,
+    );
+    const user = res.locals.user as User;
+    saveOrder(
+      res,
+      user.id,
+      user.retailerId!,
+      items,
+      idempotencyKey,
+      expectedTotalPaise,
+    );
+  });
+  app.post("/api/inbox/:id/confirm", desk, (req, res) => {
+    const { retailerId, items, expectedTotalPaise } = orderSchema
+      .omit({ idempotencyKey: true })
+      .extend({ retailerId: retailerIdSchema })
       .parse(req.body);
-    const u = res.locals.user as User;
+    const messageId = z.string().uuid().parse(req.params.id);
+    requireRetailer(retailerId);
+    saveOrder(
+      res,
+      res.locals.user.id,
+      retailerId,
+      items,
+      messageId,
+      expectedTotalPaise,
+      messageId,
+    );
+  });
+  function saveOrder(
+    res: Response,
+    actorId: string,
+    retailerId: string,
+    items: CartItem[],
+    idempotencyKey: string,
+    expectedTotalPaise: number,
+    messageId?: string,
+  ) {
     const requestHash = hash(
       JSON.stringify({
         items: [...items].sort((a, b) => a.sku.localeCompare(b.sku)),
@@ -354,13 +480,20 @@ export function createApp(db: DatabaseSync, config: Config) {
     );
     db.exec("BEGIN IMMEDIATE");
     try {
+      if (messageId) pendingMessage(messageId);
       const existing = db
         .prepare(
           "SELECT id,request_hash FROM orders WHERE retailer_id=? AND idempotency_key=?",
         )
-        .get(u.retailerId!, idempotencyKey) as
+        .get(retailerId, idempotencyKey) as
         { id: string; request_hash: string } | undefined;
       if (existing) {
+        if (messageId)
+          throw new DomainError(
+            "IDEMPOTENCY_CONFLICT",
+            "The order reference is already in use.",
+            409,
+          );
         if (existing.request_hash !== requestHash)
           throw new DomainError(
             "IDEMPOTENCY_CONFLICT",
@@ -371,7 +504,7 @@ export function createApp(db: DatabaseSync, config: Config) {
         res.json({ id: existing.id });
         return;
       }
-      const quote = priceCart(items, catalogue(db, u.retailerId!));
+      const quote = priceCart(items, catalogue(db, retailerId));
       if (quote.totalPaise !== expectedTotalPaise)
         throw new DomainError(
           "PRICE_CHANGED",
@@ -387,7 +520,7 @@ export function createApp(db: DatabaseSync, config: Config) {
         );
       db.prepare("INSERT INTO orders VALUES(?,?,?,?,?,?,?)").run(
         id,
-        u.retailerId!,
+        retailerId,
         now,
         "confirmed",
         idempotencyKey,
@@ -396,14 +529,19 @@ export function createApp(db: DatabaseSync, config: Config) {
       );
       db.prepare(
         "INSERT INTO order_events(order_id,actor_id,status,created_at) VALUES(?,?,?,?)",
-      ).run(id, u.id, "confirmed", now);
+      ).run(id, actorId, "confirmed", now);
+      if (messageId)
+        db.prepare("UPDATE message_inbox SET order_id=? WHERE id=?").run(
+          id,
+          messageId,
+        );
       db.exec("COMMIT");
       res.status(201).json({ id });
     } catch (error) {
       if (db.isTransaction) db.exec("ROLLBACK");
       throw error;
     }
-  });
+  }
 
   const toOrder = (row: Record<string, unknown>): Order => ({
     ...(JSON.parse(row.quote_json as string) as Quote),

@@ -1576,3 +1576,7 @@ tbody tr:hover {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
+.inbox-message-text {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}

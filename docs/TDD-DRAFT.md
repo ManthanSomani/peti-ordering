@@ -22,6 +22,8 @@ Users belong to a retailer or the desk. Products store SKU, bilingual names, pac
 
 The server sends indexed message fragments, catalogue metadata and recent retailer SKUs to Ollama. It validates the structured output and maps indexes back to the original text. Missing fragments remain visible for review. The server checks explicit pack sizes within the suggested product family and recognizes explicit whole-case counts. Desk staff can teach an alias for a product, scoped to that retailer. The reviewer must select a product and confirm the number of cases. The cart then uses the same stock and scheme checks as manual ordering.
 
+The desk inbox simulates incoming WhatsApp text. It stores each message with a unique ID and lets the desk select the retailer before generating suggestions. The desk reviews a quote, then explicitly confirms. Order creation and the message-to-order link are saved in one transaction. A resolved message cannot create another order. A live WhatsApp webhook remains outside this demo.
+
 ## Interface decisions
 
 The catalogue emphasizes stock, pack size and case price. Mobile screens use large controls and preserve the retailer’s language preference. The review screen keeps the original phrase visible so the retailer can resolve wrong or uncertain suggestions. The desk uses order status and a detail view to separate packing, cancellation and export. Loading, empty, failure and retry states were exercised in Chrome.

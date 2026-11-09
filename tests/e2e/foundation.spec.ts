@@ -99,6 +99,32 @@ test("capture requires review before adding an order line to the cart", async ({
   ).toBeEnabled();
 });
 
+test("desk reviews a simulated message and confirms the order", async ({
+  page,
+}) => {
+  test.skip(
+    process.env.PETI_LIVE_CAPTURE !== "1",
+    "Requires a running Ollama model",
+  );
+  test.setTimeout(90_000);
+  await login(page, "desk@peti.demo");
+  await page.getByRole("link", { name: "Message inbox" }).click();
+  await page.getByRole("button", { name: "Simulate incoming message" }).click();
+  await page.getByLabel("Retailer", { exact: true }).selectOption("r1");
+  await page.getByRole("button", { name: "Draft from message" }).click();
+  const tea = page.getByRole("group", { name: /chai patti/i });
+  await expect(tea).toBeVisible({ timeout: 68_000 });
+  await expect(tea.getByText(/Out of stock. Choose/)).toBeVisible();
+  await tea.getByRole("checkbox", { name: "Skip this line" }).check();
+  await page.getByRole("button", { name: "Review price and stock" }).click();
+  await expect(
+    page.getByRole("link", { name: /View confirmed order/ }),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Confirm and create order" }).click();
+  await page.getByRole("link", { name: /View confirmed order/ }).click();
+  await expect(page.locator(".page-heading .status")).toHaveText("Confirmed");
+});
+
 test("cold mobile catalogue benchmark", async ({ page }) => {
   test.skip(process.env.PETI_PERF !== "1", "Opt-in network benchmark");
   await page.setViewportSize({ width: 360, height: 800 });

@@ -32,6 +32,14 @@ export function openDatabase(path: string) {
     );
     INSERT OR IGNORE INTO schema_migrations VALUES(1,datetime('now'));
     INSERT OR IGNORE INTO schema_migrations VALUES(2,datetime('now'));
+    CREATE TABLE IF NOT EXISTS message_inbox (
+      id TEXT PRIMARY KEY,
+      message TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      dismissed INTEGER NOT NULL DEFAULT 0,
+      order_id TEXT REFERENCES orders(id)
+    );
+    INSERT OR IGNORE INTO schema_migrations VALUES(3,datetime('now'));
   `);
   return db;
 }

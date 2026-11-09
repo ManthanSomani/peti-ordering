@@ -26,6 +26,7 @@ import { Button, ErrorNotice, Loading } from "./components/ui";
 import { Login } from "./pages/Login";
 import { Catalogue, CartPage } from "./pages/Catalogue";
 import { Capture } from "./pages/Capture";
+import { Inbox } from "./pages/Inbox";
 import { Orders, OrderDetail } from "./pages/Orders";
 
 export function App() {
@@ -94,7 +95,14 @@ function Shell({ user, onLogout }: { user: User; onLogout: () => void }) {
           { to: "/orders", label: t("orders"), icon: ClipboardList },
           { to: "/cart", label: t("cart"), icon: ShoppingBag },
         ]
-      : [{ to: "/orders", label: t("desk"), icon: ClipboardList }];
+      : [
+          { to: "/orders", label: t("desk"), icon: ClipboardList },
+          {
+            to: "/inbox",
+            label: locale === "hi" ? "संदेश" : "Message inbox",
+            icon: ClipboardList,
+          },
+        ];
   useEffect(() => {
     document.title = `Peti · ${location.pathname.startsWith("/catalogue") ? t("catalogue") : location.pathname === "/cart" ? t("cart") : t(user.role === "desk" ? "desk" : "orders")}`;
     document.querySelector<HTMLElement>("main h1")?.focus();
@@ -224,6 +232,16 @@ function Shell({ user, onLogout }: { user: User; onLogout: () => void }) {
               }
             />
             <Route path="/orders" element={<Orders user={user} />} />
+            <Route
+              path="/inbox"
+              element={
+                user.role === "desk" ? (
+                  <Inbox />
+                ) : (
+                  <Navigate to="/catalogue" replace />
+                )
+              }
+            />
             <Route path="/orders/:id" element={<OrderDetail user={user} />} />
             <Route
               path="/"

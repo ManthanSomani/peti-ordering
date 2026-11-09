@@ -32,7 +32,7 @@ Run `docker compose down` to stop the demo. Named volumes retain the database an
 4. Run `npm run dev`.
 5. Open `http://localhost:3000`.
 
-Startup creates the database schema and applies version 1 if missing. Demo mode seeds two retailer accounts, a desk account, eight products and two historical sample orders only when the users table is empty. Restarts retain all changes. For an independent fresh demo, point DATABASE_PATH to a new filename rather than deleting existing work.
+Startup creates or updates the database schema. Demo mode seeds two retailer accounts, a desk account, eight products and two historical sample orders only when the users table is empty. Restarts retain all changes. For an independent fresh demo, point DATABASE_PATH to a new filename rather than deleting existing work.
 
 ## Built app
 
@@ -79,6 +79,8 @@ This test uses an isolated demo database. It checks all three expected SKU sugge
 Never commit `.env`, database files, API credentials or real personal data.
 
 ## Reviewer access
+
+For simulated WhatsApp intake, sign in as the desk and open **Message inbox**. Choose **Simulate incoming message**, select a retailer and choose **Draft from message**. Review the suggestions, skip the unavailable tea line if desired, review price and stock, then confirm. The message links to the created order. This workflow uses synthetic data and the local model.
 
 The deliberately public fictional demo accounts are:
 
