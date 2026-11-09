@@ -26,6 +26,13 @@ docker compose up --build
 
 Run `docker compose down` to stop the demo. The named volumes retain orders and model data for the next run.
 
+## Check and troubleshoot the stack
+
+1. Run `docker compose ps` to check that Peti is running and Ollama is healthy.
+2. Open [the health endpoint](http://localhost:3000/api/health) to check the app. Use the same port override as the app if you changed it.
+3. If Docker cannot connect to its engine, start or resume Docker Desktop, then rerun Compose. If Peti fails to start, inspect `docker compose logs peti` and `docker compose logs model`. For an AI timeout after startup, check `docker compose logs ollama` and retry once the model has loaded.
+4. If you edited the app and want to run the new build, rerun `docker compose up --build` from the project root. Keep the named volumes to retain existing orders and avoid downloading the model again.
+
 ## Demo sign-in
 
 | Account            | Role and use                               |
@@ -45,7 +52,9 @@ Choose an account and request a code. Enter the six-digit code displayed in the 
 
 ## Native setup
 
-Use Node 22.13 or newer, npm and a writable local filesystem. With Ollama running locally, install the demo model with `ollama pull qwen2.5:3b`. Run `npm ci`, copy `.env.example` to `.env`, and add the installed model name under `OLLAMA_MODEL`. Enable CPU inference with `PETI_OLLAMA_CPU` if GPU inference times out. Run `npm run dev` and open [Peti on localhost](http://localhost:3000). For the built app, run `npm run build` and `npm start`.
+1. Install Node 22.13 or newer, npm and Ollama. Start Ollama, then run `ollama pull qwen2.5:3b`.
+2. From the project root, run `npm ci` and copy `.env.example` to `.env`. Set `OLLAMA_MODEL` to the installed model name. Enable CPU inference using `PETI_OLLAMA_CPU` if GPU inference times out.
+3. Run `npm run dev` and open [Peti on localhost](http://localhost:3000). For a production build, stop the dev process, then run `npm run build` followed by `npm start`.
 
 Startup migrates the database and seeds fictional data when demo mode is enabled and the users table is empty. To start an independent demo, use a fresh file for `DATABASE_PATH`.
 
