@@ -40,7 +40,8 @@ Choose an account and request a code. Enter the six-digit code displayed in the 
 
 1. As Sharma, add 10 biscuit cases and 5 detergent cases. Review one free biscuit case and a 3% detergent line discount at checkout. Confirm the order.
 2. As the desk, open that order, move it to processing and packed, then download its Tally staging CSV.
-3. In **Message inbox**, choose **Simulate incoming message**. Select Sharma and choose **Draft from message**. Review the suggested products and quantities, skip unavailable tea, review price and stock, then explicitly confirm. The message links to the saved order.
+3. On **Order desk**, choose **Export all orders CSV** beside **Refresh**. The report contains one row per order across all statuses and pages, independent of the active filter.
+4. In **Message inbox**, choose **Simulate incoming message**. Select Sharma and choose **Draft from message**. Review the suggested products and quantities, skip unavailable tea, review price and stock, then explicitly confirm. The message links to the saved order.
 
 ## Native setup
 
@@ -69,4 +70,4 @@ Compose supplies the app settings. Keep local environment files, credentials, da
 
 Run `npm test` for domain and API checks. Build the app before running `npm run test:e2e` with Chrome installed. By default, the browser suite uses a separate seeded database. Set `PETI_LIVE_CAPTURE` to enable the two live model tests after configuring Ollama. Set `PETI_PERF` to enable the network benchmark.
 
-The verified delivery is local Docker Compose. A hosted installation would require a reachable inference service, one SQLite writer with a persistent volume and HTTPS cookie configuration. The export is a staging CSV. Import into the target Tally company requires validation of its ledger, unit and item mappings.
+The verified delivery is local Docker Compose. A hosted installation would require a reachable inference service, one SQLite writer with a persistent volume and HTTPS cookie configuration. The packed-order CSV is for Tally staging. Import into the target Tally company requires validation of its ledger, unit and item mappings.

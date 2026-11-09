@@ -16,7 +16,7 @@ import {
 import type { DatabaseSync } from "node:sqlite";
 import { z } from "zod";
 import { catalogue } from "./database";
-import { orderExport } from "./order-export";
+import { allOrdersExport, orderExport } from "./order-export";
 import { captureOrder, normalizeAlias } from "./capture";
 import { DomainError, priceCart } from "../shared/pricing";
 import type { User, Order, Quote, Status, CartItem } from "../shared/types";
@@ -588,6 +588,17 @@ export function createApp(db: DatabaseSync, config: Config) {
       page: safePage,
       pages,
     });
+  });
+  app.get("/api/orders/export", desk, (_req, res) => {
+    const rows = db
+      .prepare(
+        "SELECT o.*, r.shop FROM orders o JOIN retailers r ON r.id=o.retailer_id ORDER BY o.created_at DESC,o.id DESC",
+      )
+      .all();
+    res
+      .attachment("peti-all-orders.csv")
+      .type("text/csv")
+      .send(allOrdersExport(rows.map(toOrder)));
   });
   app.get("/api/orders/:id", (req, res) => {
     const u = res.locals.user as User;

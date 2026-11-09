@@ -214,6 +214,21 @@ test("mobile order with schemes reaches desktop desk and exports", async ({
   expect(csv).toContain('"SKU-BS-075"');
   expect(csv).toContain('"SKU-DT-1KG"');
   expect((await page.request.get(exportPath.href)).status()).toBe(403);
+  await office.setViewportSize({ width: 360, height: 800 });
+  await office.goto("/orders?status=cancelled&page=1");
+  const allOrdersDownload = office.waitForEvent("download");
+  await office
+    .getByRole("button", { name: "Export all orders CSV" })
+    .press("Enter");
+  expect((await allOrdersDownload).suggestedFilename()).toBe(
+    "peti-all-orders.csv",
+  );
+  const allOrdersCsv = await (
+    await office.request.get("/api/orders/export")
+  ).text();
+  expect(allOrdersCsv).toContain(`"${id}"`);
+  expect(allOrdersCsv).toContain('"PT-DEMO-002"');
+  expect((await page.request.get("/api/orders/export")).status()).toBe(403);
   await page.goto(url);
   await expect(page.locator(".page-heading .status")).toHaveText("Packed");
   await context.close();

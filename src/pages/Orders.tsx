@@ -10,6 +10,7 @@ import {
   ArrowRight,
   Check,
   Clock3,
+  Download,
   PackageCheck,
   RefreshCw,
 } from "lucide-react";
@@ -25,13 +26,50 @@ import {
   Notice,
   StatusBadge,
 } from "../components/ui";
+function useCsvExport() {
+  const [exportError, setExportError] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  async function downloadExport(path: string, filename: string) {
+    setExporting(true);
+    setExportError(false);
+    try {
+      const response = await fetch(path, {
+        signal: AbortSignal.timeout(15_000),
+      });
+      if (
+        !response.ok ||
+        !response.headers.get("Content-Type")?.startsWith("text/csv")
+      )
+        throw new Error("Export failed");
+      const url = URL.createObjectURL(await response.blob());
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch {
+      setExportError(true);
+    } finally {
+      setExporting(false);
+    }
+  }
+  return { exportError, exporting, downloadExport };
+}
+
 export function Orders({ user }: { user: User }) {
   const { t, locale, money } = useLocale();
   const [params, setParams] = useSearchParams();
   const r = useResource<Page<Order>>(`/orders?${params}`);
+  const { exportError, exporting, downloadExport } = useCsvExport();
   return (
     <section className="page">
-      <div className="page-heading">
+      <div
+        className={
+          user.role === "desk"
+            ? "page-heading desk-order-heading"
+            : "page-heading"
+        }
+      >
         <div>
           <span className="eyebrow">
             {t(user.role === "desk" ? "desk" : "orders")}
@@ -41,11 +79,32 @@ export function Orders({ user }: { user: User }) {
           </h1>
           <p>{t(user.role === "desk" ? "deskIntro" : "ordersIntro")}</p>
         </div>
-        <Button variant="secondary" onClick={r.reload} busy={r.loading}>
-          <RefreshCw size={16} />
-          {t("refresh")}
-        </Button>
+        <div className="order-heading-actions">
+          {user.role === "desk" && (
+            <Button
+              variant="secondary"
+              busy={exporting}
+              onClick={() =>
+                downloadExport("/api/orders/export", "peti-all-orders.csv")
+              }
+            >
+              <Download size={16} />
+              {locale === "hi" ? "सभी ऑर्डर का CSV" : "Export all orders CSV"}
+            </Button>
+          )}
+          <Button variant="secondary" onClick={r.reload} busy={r.loading}>
+            <RefreshCw size={16} />
+            {t("refresh")}
+          </Button>
+        </div>
       </div>
+      {exportError && (
+        <Notice tone="error">
+          {locale === "hi"
+            ? "CSV डाउनलोड नहीं हुआ। फिर कोशिश करें।"
+            : "Could not download the CSV. Try again."}
+        </Notice>
+      )}
       <div className="filter-row order-filters">
         {(
           ["all", "confirmed", "processing", "packed", "cancelled"] as const
@@ -179,35 +238,7 @@ export function OrderDetail({ user }: { user: User }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const [cancelReview, setCancelReview] = useState(false);
-  const [exportError, setExportError] = useState(false);
-  const [exporting, setExporting] = useState(false);
-  async function downloadExport(orderId: string) {
-    setExporting(true);
-    setExportError(false);
-    try {
-      const response = await fetch(
-        `/api/orders/${encodeURIComponent(orderId)}/export`,
-        {
-          signal: AbortSignal.timeout(15_000),
-        },
-      );
-      if (
-        !response.ok ||
-        !response.headers.get("Content-Type")?.startsWith("text/csv")
-      )
-        throw new Error("Export failed");
-      const url = URL.createObjectURL(await response.blob());
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `peti-${orderId}-tally-staging.csv`;
-      link.click();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-    } catch {
-      setExportError(true);
-    } finally {
-      setExporting(false);
-    }
-  }
+  const { exportError, exporting, downloadExport } = useCsvExport();
   async function advance(status: "processing" | "packed" | "cancelled") {
     setBusy(true);
     setError(null);
@@ -414,7 +445,12 @@ export function OrderDetail({ user }: { user: User }) {
               <Button
                 className="full"
                 busy={exporting}
-                onClick={() => downloadExport(order.id)}
+                onClick={() =>
+                  downloadExport(
+                    `/api/orders/${encodeURIComponent(order.id)}/export`,
+                    `peti-${order.id}-tally-staging.csv`,
+                  )
+                }
               >
                 {locale === "hi" ? "CSV डाउनलोड करें" : "Download export CSV"}
               </Button>

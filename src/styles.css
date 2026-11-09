@@ -645,6 +645,15 @@ main {
   font-size: 13px;
   max-width: 650px;
 }
+.order-heading-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.desk-order-heading {
+  flex-wrap: wrap;
+}
 .tax-tag {
   display: flex;
   gap: 5px;

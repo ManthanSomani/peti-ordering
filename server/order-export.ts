@@ -6,6 +6,21 @@ function csvText(value: string) {
   return '"' + safe.replaceAll('"', '""') + '"';
 }
 
+export function allOrdersExport(orders: Order[]) {
+  const header =
+    "OrderReference,PlacedAtUTC,PartyReference,PartyName,PaidCases,FreeCases,OrderTotalINR,Status";
+  const rows = orders.map((order) =>
+    [
+      ...[order.id, order.createdAt, order.retailerId, order.shop].map(csvText),
+      order.lines.reduce((total, line) => total + line.cases, 0),
+      order.lines.reduce((total, line) => total + line.freeCases, 0),
+      (order.totalPaise / 100).toFixed(2),
+      csvText(order.status),
+    ].join(","),
+  );
+  return [header, ...rows].join("\r\n") + "\r\n";
+}
+
 export function orderExport(order: Order) {
   if (order.status !== "packed") {
     throw new DomainError(

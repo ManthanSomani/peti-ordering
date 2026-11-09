@@ -9,6 +9,7 @@ A full-stack take-home for the FMCG distributor brief.
 - Server-priced cart, repeating buy-ten-get-one scheme and three-percent threshold discounts.
 - Transactional stock checks, idempotent confirmation, immutable pricing snapshots and per-retailer data isolation.
 - Order history and desk processing/packing with persisted events.
+- Desk-only CSV report of all orders, independent of the current filter and page.
 - Simulated WhatsApp inbox for desk staff with live AI suggestions and explicit confirmation.
 - Automated pricing/API/browser/accessibility checks.
 
