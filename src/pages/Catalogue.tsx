@@ -194,6 +194,17 @@ export function Catalogue() {
                             </>
                           )}
                         </Button>
+                        {count > 0 && (
+                          <Button
+                            variant="ghost"
+                            className="full"
+                            aria-label={`${t("remove")}: ${locale === "hi" ? p.nameHi : p.name} ${p.size}`}
+                            onClick={() => setCount(p.id, 0)}
+                          >
+                            <Trash2 size={16} />
+                            {t("remove")}
+                          </Button>
+                        )}
                       </div>
                     </article>
                   );
