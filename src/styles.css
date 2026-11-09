@@ -1563,3 +1563,16 @@ tbody tr:hover {
 .capture-form textarea.resize-none {
   resize: none;
 }
+.catalogue-stepper {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center;
+  text-align: center;
+  background: var(--color-soft);
+  border-radius: var(--radius-control);
+}
+
+.catalogue-stepper output {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}

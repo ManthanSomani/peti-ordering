@@ -6,6 +6,7 @@ import {
   Check,
   Package,
   Plus,
+  Minus,
   Search,
   ShoppingBag,
   Tag,
@@ -173,27 +174,39 @@ export function Catalogue() {
                             ? `${p.stock} ${t("stock")}`
                             : t("outOfStock")}
                         </div>
-                        <Button
-                          variant={count ? "primary" : "secondary"}
-                          className="full"
-                          disabled={
-                            !p.stock || count >= p.stock || count >= 1000
-                          }
-                          onClick={() => setCount(p.id, count + 1)}
-                          aria-label={`${t("add")}: ${locale === "hi" ? p.nameHi : p.name} ${p.size}`}
-                        >
-                          {count ? (
-                            <>
-                              <Check size={16} />
-                              {count} {t("added")}
-                            </>
-                          ) : (
-                            <>
+                        {count > 0 ? (
+                          <div className="catalogue-stepper">
+                            <Button
+                              variant="secondary"
+                              aria-label={`${t("subtractCase")}: ${locale === "hi" ? p.nameHi : p.name} ${p.size}`}
+                              onClick={() => setCount(p.id, count - 1)}
+                            >
+                              <Minus size={16} />
+                            </Button>
+                            <output aria-live="polite" aria-label={t("added")}>
+                              {count}
+                            </output>
+                            <Button
+                              variant="secondary"
+                              disabled={count >= p.stock || count >= 1000}
+                              onClick={() => setCount(p.id, count + 1)}
+                              aria-label={`${t("add")}: ${locale === "hi" ? p.nameHi : p.name} ${p.size}`}
+                            >
                               <Plus size={16} />
-                              {t("add")}
-                            </>
-                          )}
-                        </Button>
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button
+                            variant="secondary"
+                            className="full"
+                            disabled={!p.stock}
+                            onClick={() => setCount(p.id, 1)}
+                            aria-label={`${t("add")}: ${locale === "hi" ? p.nameHi : p.name} ${p.size}`}
+                          >
+                            <Plus size={16} />
+                            {t("add")}
+                          </Button>
+                        )}
                         {count > 0 && (
                           <Button
                             variant="ghost"
