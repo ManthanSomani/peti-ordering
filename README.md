@@ -9,11 +9,12 @@ A full-stack take-home for the FMCG distributor brief.
 - Server-priced cart, repeating buy-ten-get-one scheme and three-percent threshold discounts.
 - Transactional stock checks, idempotent confirmation, immutable pricing snapshots and per-retailer data isolation.
 - Order history and desk processing/packing with persisted events.
+- Simulated WhatsApp inbox for desk staff with live AI suggestions and explicit confirmation.
 - Automated pricing/API/browser/accessibility checks.
 
-## Not implemented yet
+## Demo boundaries
 
-Optional offline/photo/voice features, hosted deployment, the final PDF/Word TDD and the submission ZIP remain pending. Cart is currently in memory and is cleared on refresh or sign-out.
+The demo runs locally in Docker. Live WhatsApp, offline sales, photo capture and voice capture were deferred. The cart clears on refresh or sign-out.
 
 Desk staff can cancel a confirmed order or process and pack it. Open a packed order to download its CSV for Tally mapping. The company-specific Tally import still needs validation.
 
@@ -55,7 +56,7 @@ npm run build
 npm run test:e2e
 ```
 
-Browser tests use installed Google Chrome and launch an isolated app on port 3100 with a fresh, separate SQLite database. Screenshots are saved under ignored `artifacts/`. The tests do not mutate your normal demo database. Native SQLite is experimental in Node 22; the warning is expected.
+Browser tests use installed Google Chrome and launch an isolated app on port 3100 with a fresh, separate SQLite database by default. Screenshots are saved under ignored `artifacts/`. Native SQLite is experimental in Node 22 and prints a warning.
 
 ## Structure
 

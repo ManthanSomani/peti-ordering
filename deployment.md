@@ -1,99 +1,72 @@
-# Deployment instructions — working draft
+# Peti deployment and reviewer guide
 
-The [public GitHub repository](https://github.com/ManthanSomani/peti-ordering) is available. The Docker Compose demo was verified locally with live AI capture, checkout, CSV export and a container restart.
+[Public GitHub repository](https://github.com/ManthanSomani/peti-ordering)
 
-## Prerequisites
+Peti runs locally through Docker Compose. The Compose demo includes the SQLite database and Ollama inference. It uses fictional accounts and requires no AI API key.
 
-For the container demo, use Docker with Compose and a running Linux container engine. Internet access is needed for the first build and model download. Follow the Docker steps below, or use the native setup if you prefer running Node and Ollama directly.
+## Start the demo
 
-- Node.js 22.13 or newer; Node 22.22 was used for development.
-- npm and a writable local filesystem.
-- Google Chrome to run browser tests (not needed to run the app).
+1. Install Docker with Compose and start its Linux container engine. Allow internet access for the first build and several gigabytes of disk space for images and the model.
+2. Clone the project and start Compose from a regular terminal.
 
-## Docker demo
+   ```sh
+   git clone https://github.com/ManthanSomani/peti-ordering.git
+   cd peti-ordering
+   docker compose up --build
+   ```
 
-From the repository root, run:
+3. Open [Peti on localhost](http://localhost:3000) when the app starts. Compose waits for Ollama to be healthy and for model setup to finish. A successful model setup exits with code 0. The first startup downloads the Ollama image and roughly 1.9 GB of model data. CPU inference can take tens of seconds on the first request.
 
-```sh
+If port 3000 is occupied, set `PETI_PORT` to a free port before starting Compose and open that port on localhost. For example, in PowerShell:
+
+```powershell
+$env:PETI_PORT = '3200'
 docker compose up --build
 ```
 
-Open [Peti on localhost](http://localhost:3000) once the app logs that it is running. Use the demo accounts listed below. Compose starts Ollama, downloads Qwen 2.5 3B if needed, then starts Peti. The first run downloads the base images, npm packages and approximately 1.9 GB of model data. Inference runs on CPU and cold model loading can take longer than subsequent requests. The app uses the internal Ollama endpoint without API credentials.
+Run `docker compose down` to stop the demo. The named volumes retain orders and model data for the next run.
 
-On x86-64, the Ollama image checked during development adds about 3.4 GB of compressed downloads. Allow several gigabytes of additional disk space for unpacked image layers. If you already have Ollama and the model installed on your machine, the native setup below can reuse them.
+## Demo sign-in
 
-Run `docker compose down` to stop the demo. Named volumes retain the database and the model for the next run. If port 3000 is occupied, set `PETI_PORT` to an available port before starting Compose and open that port on `localhost`.
+| Account            | Role and use                               |
+| ------------------ | ------------------------------------------ |
+| `sharma@peti.demo` | Retailer with the source sample prices     |
+| `verma@peti.demo`  | Retailer with distinct demo prices         |
+| `desk@peti.demo`   | Desk staff with inbox, workflow and export |
 
-## Native local setup
+Choose an account and request a code. Enter the six-digit code displayed in the demo panel. The code expires after five minutes. Delivery is simulated and requires no email or SMS access.
 
-1. Obtain the repository and open its root directory.
-2. Run `npm ci`.
-3. Copy `.env.example` to `.env` (`Copy-Item .env.example .env` in PowerShell).
-4. Run `npm run dev`.
-5. Open `http://localhost:3000`.
+## Suggested review
 
-Startup creates or updates the database schema. Demo mode seeds two retailer accounts, a desk account, eight products and two historical sample orders only when the users table is empty. Restarts retain all changes. For an independent fresh demo, point DATABASE_PATH to a new filename rather than deleting existing work.
+1. As Sharma, add 10 biscuit cases and 5 detergent cases. Review one free biscuit case and a 3% detergent line discount at checkout. Confirm the order.
+2. As the desk, open that order, move it to processing and packed, then download its Tally staging CSV.
+3. In **Message inbox**, choose **Simulate incoming message**. Select Sharma and choose **Draft from message**. Review the suggested products and quantities, skip unavailable tea, review price and stock, then explicitly confirm. The message links to the saved order.
 
-## Built app
+## Native setup
 
-Run `npm run build`, then `npm start`. Assets are served from `dist/` by the same server as the API. A deployed SQLite app requires a persistent volume and a single writer instance; ephemeral serverless storage is unsuitable. Configure the actual HTTPS origin, enable secure cookies, and configure HOST for the hosting network. No infrastructure has been provisioned.
+Use Node 22.13 or newer, npm and a writable local filesystem. With Ollama running locally, install the demo model with `ollama pull qwen2.5:3b`. Run `npm ci`, copy `.env.example` to `.env`, and add the installed model name under `OLLAMA_MODEL`. Enable CPU inference with `PETI_OLLAMA_CPU` if GPU inference times out. Run `npm run dev` and open [Peti on localhost](http://localhost:3000). For the built app, run `npm run build` and `npm start`.
 
-## Railway deployment plan
+Startup migrates the database and seeds fictional data when demo mode is enabled and the users table is empty. To start an independent demo, use a fresh file for `DATABASE_PATH`.
 
-1. Create one service from the GitHub repository. The Dockerfile builds the UI and runs the existing Express server. Railway reads the health-check path and single replica setting from `railway.toml`.
-2. Attach a persistent volume at `/data` and set `DATABASE_PATH` to a SQLite file inside it. Use a fresh hosted database for the synthetic demo.
-3. Generate an HTTPS domain, set `APP_ORIGIN` to that exact origin and enable `COOKIE_SECURE`. Enable `DEMO_MODE` for the seeded reviewer accounts. Railway supplies `PORT` and the container listens on all interfaces.
-4. Verify the health endpoint and sign in as both roles. Place a test order, pack it, download the CSV, then confirm the data survives a restart.
+## Environment variables
 
-The Docker demo is the verified reviewer setup. A public AI deployment would require a reachable inference service. The optional Railway plan above is unverified.
+| Name              | Purpose                                 |
+| ----------------- | --------------------------------------- |
+| `PETI_PORT`       | Override the Compose host port          |
+| `PORT`            | App listening port                      |
+| `HOST`            | App listening interface                 |
+| `APP_ORIGIN`      | Exact browser origin allowed for writes |
+| `DATABASE_PATH`   | Private SQLite file path                |
+| `DEMO_MODE`       | Enable fictional data and simulated OTP |
+| `COOKIE_SECURE`   | Restrict the session cookie to HTTPS    |
+| `OLLAMA_MODEL`    | Installed model for text extraction     |
+| `OLLAMA_URL`      | Ollama service URL                      |
+| `PETI_OLLAMA_CPU` | Enable CPU inference                    |
 
-Railway references: [persistent volumes](https://docs.railway.com/volumes) and [deployment configuration](https://docs.railway.com/config-as-code/reference).
+Compose supplies the app settings. Keep local environment files, credentials, database files and real personal data out of Git.
 
-## Environment variables (names only)
+## Verification and deployment boundary
 
-- `PORT`: HTTP listening port.
-- `HOST`: listening interface; defaults to loopback locally.
-- `APP_ORIGIN`: exact allowed browser origin for mutations.
-- `DATABASE_PATH`: private SQLite database path on persistent storage.
-- `DEMO_MODE`: explicitly enables synthetic account seeding and simulated OTP delivery.
-- `COOKIE_SECURE`: enables HTTPS-only session cookies.
+Run `npm test` for domain and API checks. Build the app before running `npm run test:e2e` with Chrome installed. By default, the browser suite uses a separate seeded database. Set `PETI_LIVE_CAPTURE` to enable the two live model tests after configuring Ollama. Set `PETI_PERF` to enable the network benchmark.
 
-- `OLLAMA_MODEL`: installed local model used for message extraction. Omit to disable extraction.
-- `OLLAMA_URL`: optional Ollama service URL. Defaults to the local Ollama endpoint.
-- `PETI_OLLAMA_CPU`: set to `1` to use CPU inference. This was required for the verified Windows run after GPU inference timed out.
-
-Start Ollama and install a model that supports structured output before setting the model name in your local environment. The server sends message text and product descriptions to this service. Use synthetic messages for the demo. [Ollama structured outputs](https://docs.ollama.com/capabilities/structured-outputs).
-
-Run the opt-in live acceptance test from PowerShell once Ollama is running and the chosen model is installed. Replace the model name if needed.
-
-```powershell
-$env:OLLAMA_MODEL = 'qwen2.5:3b'
-$env:PETI_OLLAMA_CPU = '1'
-$env:PETI_LIVE_CAPTURE = '1'
-npm run build
-npm run test:e2e -- -g "live model captures"
-```
-
-This test uses an isolated demo database. It checks all three expected SKU suggestions, the unavailable tea, manual confirmation of case counts and that opening checkout creates no order.
-
-Never commit `.env`, database files, API credentials or real personal data.
-
-## Reviewer access
-
-For simulated WhatsApp intake, sign in as the desk and open **Message inbox**. Choose **Simulate incoming message**, select a retailer and choose **Draft from message**. Review the suggestions, skip the unavailable tea line if desired, review price and stock, then confirm. The message links to the created order. This workflow uses synthetic data and the local model.
-
-The deliberately public fictional demo accounts are:
-
-- `sharma@peti.demo`: retailer, source sample prices.
-- `verma@peti.demo`: second retailer, distinct prices to demonstrate isolation.
-- `desk@peti.demo`: office order desk.
-
-Choose an account, request the six-digit code, then enter the code shown in the demo panel. Codes expire after five minutes and allow at most five verification attempts. No SMS/email is sent. Server permissions remain real; simulated delivery must not be used for real users.
-
-## Verification
-
-`npm test` runs scheme/API checks. `npm run test:e2e` requires a built app and installed Chrome; it starts an isolated database/server on port 3100. Run `npm run format:check`, `npm run typecheck`, `npm run tokens:check` and `npm run build` before packaging.
-
-## Limitations for this draft
-
-The target-company Tally import test, hosted deployment and final TDD are pending. The app uses demo OTP delivery and in-memory cart drafts. The compressed production build reached a 4.545-second median in the local slow-3G simulation, above the three-second target. See docs/PROGRESS.md for the measurement conditions.
+The verified delivery is local Docker Compose. A hosted installation would require a reachable inference service, one SQLite writer with a persistent volume and HTTPS cookie configuration. The export is a staging CSV. Import into the target Tally company requires validation of its ledger, unit and item mappings.

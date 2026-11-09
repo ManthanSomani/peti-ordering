@@ -110,6 +110,16 @@ test("desk reviews a simulated message and confirms the order", async ({
   await login(page, "desk@peti.demo");
   await page.getByRole("link", { name: "Message inbox" }).click();
   await page.getByRole("button", { name: "Simulate incoming message" }).click();
+  const newestMessage = page.locator(".detail-panel .capture-form").first();
+  const confirmedOrder = newestMessage.getByRole("link", {
+    name: /View confirmed order/,
+  });
+  await expect(
+    newestMessage.getByRole("button", {
+      name: "Review message",
+      pressed: true,
+    }),
+  ).toBeVisible();
   await page.getByLabel("Retailer", { exact: true }).selectOption("r1");
   await page.getByRole("button", { name: "Draft from message" }).click();
   const tea = page.getByRole("group", { name: /chai patti/i });
@@ -117,11 +127,9 @@ test("desk reviews a simulated message and confirms the order", async ({
   await expect(tea.getByText(/Out of stock. Choose/)).toBeVisible();
   await tea.getByRole("checkbox", { name: "Skip this line" }).check();
   await page.getByRole("button", { name: "Review price and stock" }).click();
-  await expect(
-    page.getByRole("link", { name: /View confirmed order/ }),
-  ).toHaveCount(0);
+  await expect(confirmedOrder).toHaveCount(0);
   await page.getByRole("button", { name: "Confirm and create order" }).click();
-  await page.getByRole("link", { name: /View confirmed order/ }).click();
+  await confirmedOrder.click();
   await expect(page.locator(".page-heading .status")).toHaveText("Confirmed");
 });
 

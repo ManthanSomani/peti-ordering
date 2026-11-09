@@ -20,7 +20,7 @@ The brief's uncertain money conventions are recorded in docs/DECISIONS.md and sh
 - DESIGN.md validator — zero errors; colour-token orphan warnings reflect that the validator cannot infer direct CSS consumers. The one invalid component sub-token warning was corrected.
 - Desktop and mobile Hindi screenshots were inspected from automated browser runs. They are ignored review artifacts under `artifacts/`.
 
-## Remaining before submission
+## Later verification
 
 Phase 3 passed the live Chrome acceptance test on 8 November 2026 using Ollama with Qwen 2.5 3B and CPU inference. The test took 22 seconds. It verified the biscuit and detergent suggestions, the unavailable 250 g tea and that review through checkout created no order. The GPU attempt exceeded the 60-second request timeout on this machine. The local API and domain suite also passed all 21 tests.
 
@@ -39,6 +39,8 @@ The three-second target was missed in this simulation. The result applies to the
 
 Phase 6 covers deployment if chosen, public repository, TDD and submission ZIP.
 
-The public repository is available and the local Docker Compose demo was verified on 8 November 2026. The Ollama model downloaded automatically into its volume. Chrome passed live capture of the assignment message and the mobile checkout through desk CSV export. The live capture test took 37.2 seconds including container cold start. Three saved orders retained their statuses across an app container restart. The final TDD and submission ZIP remain pending.
+The public repository is available and the local Docker Compose demo was verified on 8 November 2026. The Ollama model downloaded automatically into its volume. Three saved orders retained their statuses across an app container restart.
+
+On 9 November, the production build, formatting and token checks, 22 domain/API tests and seven Chrome checks passed. Chrome covered both live Ollama workflows, checkout through CSV export, responsive Hindi, accessibility and sign-in. The final benchmark runs were 4.435 s, 4.517 s and 4.521 s under the same profile. The final TDD and reviewer guide were packaged for portal upload.
 
 The cart draft lives in browser memory and refreshing clears it. The OTP is displayed on screen in demo mode. SQLite requires a persistent volume for hosted deployment. Production load still needs measurement.

@@ -219,6 +219,6 @@ Performance targets and business success numbers in the brief are not achieved o
 - [x] Phase 3: AI capture. Full sample verified in Chrome with local Ollama.
 - [x] Phase 4: desk and export. Local CSV handoff verified. Target-company Tally import remains unverified.
 - [x] Phase 5: quality verification. Slow-3G benchmark measured and documented above target.
-- [ ] Phase 6: deployment and package.
+- [x] Phase 6: local Docker demo, public repository and submission package.
 
 Update this plan as decisions become final. Record material changes and rationale in the TDD; do not silently turn assumptions into claimed client requirements.
